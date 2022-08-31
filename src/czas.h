@@ -13,14 +13,21 @@ class Czas
     RTC_DS1307 rtc;
     DateTime now;
     bool ntpConnected=false;
+    bool useNTP=true;
     unsigned long rtcLastUpdate;
     public:
      Czas(WiFiUDP& ntpUDP):timeClient(ntpUDP){};
-     void setNTP(const char* pool,long offset)
+     void setNTP(bool isActive,const char* pool,long offset)
      {
+        useNTP=isActive;
+       
+       
         timeClient.setPoolServerName(pool);
         timeClient.setTimeOffset(offset);
+        
+       
         ntpConnected=timeClient.update();
+        
         Serial.print("NTP: ");
         if(ntpConnected)
         {
@@ -31,10 +38,11 @@ class Czas
         }
 
      };
-     void begin(const char* pool,long offset)
+     
+     void begin(bool _useNtp,const char* pool,long offset)
      {
         Serial.print("Init Czas ");
-        setNTP(pool,offset);
+        setNTP(_useNtp,pool,offset);
         timeClient.begin();
         if (! rtc.begin()) 
         {
@@ -56,7 +64,14 @@ class Czas
      };
      void loop()
      {
-         ntpConnected=timeClient.update();
+         
+         if(useNTP) 
+         {
+            ntpConnected=timeClient.update();
+         }else
+         {
+            ntpConnected=false;
+         }
          if(millis()-rtcLastUpdate>RTC_INTERVAL_MS)
          {
             now=rtc.now();
@@ -97,8 +112,9 @@ class Czas
         String ret=timeClient.getFormattedTime();
         return ret;
      };
-     unsigned long getTimeInSeconds()
+     unsigned long getTimeInSecondsNTP()
      {
+         if(!useNTP) return 0;
         //zmienic na czas z zegarkow
         return timeClient.getEpochTime();
      };
@@ -113,7 +129,7 @@ class Czas
      };
     String getTimeStringNTP()
     {
-        return timeToString(getTimeInSeconds());
+        return timeToString(getTimeInSecondsNTP());
     };
 };
 

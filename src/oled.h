@@ -101,7 +101,7 @@ class Oled{
       //  display.invertDisplay(false);
        // delay(1000);
 
-        testanimate(logo_bmp, LOGO_WIDTH, LOGO_HEIGHT); // Animate bitmaps
+    //    testanimate(logo_bmp, LOGO_WIDTH, LOGO_HEIGHT); // Animate bitmaps
 };
 
 void loop() {};
@@ -364,12 +364,12 @@ void testanimate(const uint8_t *bitmap, uint8_t w, uint8_t h) {
     icons[f][XPOS]   = random(1 - LOGO_WIDTH, display.width());
     icons[f][YPOS]   = -LOGO_HEIGHT;
     icons[f][DELTAY] = random(1, 6);
-    Serial.print(F("x: "));
-    Serial.print(icons[f][XPOS], DEC);
-    Serial.print(F(" y: "));
-    Serial.print(icons[f][YPOS], DEC);
-    Serial.print(F(" dy: "));
-    Serial.println(icons[f][DELTAY], DEC);
+  //  Serial.print(F("x: "));
+  //  Serial.print(icons[f][XPOS], DEC);
+  //  Serial.print(F(" y: "));
+  //  Serial.print(icons[f][YPOS], DEC);
+  //  Serial.print(F(" dy: "));
+  //  Serial.println(icons[f][DELTAY], DEC);
   }
   display.setTextSize(2); // Draw 2X-scale text
   display.setTextColor(WHITE);
@@ -451,5 +451,16 @@ void testanimate(const uint8_t *bitmap, uint8_t w, uint8_t h) {
       display.print(F("NTP: "));display.println(ntp);
       display.display();
   };
+  void drawText(String txt, int size)
+  {
+      display.clearDisplay();
+      display.setTextSize(size);             // Normal 1:1 pixel scale
+      display.setTextColor(WHITE);        // Draw white text
+      display.setCursor(0,0);             // Start at top-left corner
+      display.print(txt);
+      display.display();
+    
+  }
+  
 };
 #endif

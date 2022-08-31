@@ -1,20 +1,31 @@
 #ifndef AUTOCONNECT_SETUP_H
 #define AUTOCONNECT_SETUP_H
 #include <AutoConnect.h>
+#include "oled.h"
+extern Oled oled;
 
 void OTAStart() {
         Serial.println("Start OTA updating");
+        oled.drawText("Start aktualizacji..",2);
+        
     };
 
     void OTAEnd() {
         Serial.println("\nEnd");
+         oled.drawText("koniec aktualizacji, sukces",2);
+       
     };
     void OTAProgress(unsigned int amount, unsigned int size) {
         Serial.printf("Progress: %u(%u)\r", amount, size);
+        double proc= (double)(amount) / (double)ESP.getFlashChipSize()*100;
+        String s=String("Postep: ")+ String(amount) + String(" / ")+String(ESP.getFlashChipSize())+String( "-")+ String(proc,1)+String("%.");
+        oled.drawText(s,2); 
     };
 
     void OTAError(uint8_t error) {
         Serial.printf("Error[%u]: ", error);
+        String s=String("Blad aktualizacji: ")+ String(error);
+        oled.drawText(s,2);
     };
     void onConnect(IPAddress& ipaddr) {
         Serial.print("WiFi connected with ");

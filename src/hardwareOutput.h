@@ -1,6 +1,8 @@
 #ifndef HARDWAREOUTPUT_H
 #define HARDWAREOUTPUT_H
 
+#include <PCF8574.h>
+
 #define MAX_OUT 8
 #define UPDATE_INTERVAL_MS 300
 
@@ -43,8 +45,9 @@ class HardwareOutput
             case 7: outValue.p7=value;  break;
         
         }
+        pcf8574.digitalWriteAll(outValue);
     }
-    void setValByte(uint8_t pin, uint8_t value)
+ /*   void setValByte(uint8_t pin, uint8_t value)
     {
 		if (value==HIGH){
 			outValueByte = outValueByte | bit(pin);
@@ -53,13 +56,13 @@ class HardwareOutput
 			outValueByte = outValueByte & ~bit(pin);		
 		}
 
-	}
+	}*/
     void loop()
     {
-        if(millis()-lastUpdateMillis<UPDATE_INTERVAL_MS)return;
+        //if(millis()-lastUpdateMillis<UPDATE_INTERVAL_MS)return;
         
-        pcf8574.digitalWriteAll(outValue);
-        lastUpdateMillis=millis();
+        //pcf8574.digitalWriteAll(outValue);
+        //lastUpdateMillis=millis();
 
         /* static int pin = 0;
         pcf8574.digitalWrite(pin, HIGH);

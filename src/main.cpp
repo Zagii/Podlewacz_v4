@@ -6,13 +6,15 @@
 #include <ArduinoJson.h>
 #include <PCF8574.h>
 #include <WiFiUdp.h>
+#include "defy.h"
 #include "autoConnectSetup.h"
 #include "oled.h"
+#include "config/config.h"
 #include "hardwareOutput.h"
-#include "configurationFS.h"
 #include "czas.h"
-#include "webServer.h"
-
+#include "apiServer.h"
+#include "sekcja.h"
+//class ConfigAll;
 
 Oled oled;
 HardwareOutput hw;
@@ -34,19 +36,20 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
   Serial.println("Podlewacz - inicjalizacja");
+  LittleFS.begin();
   hw.begin();
  
-  config.begin(&czas);
+  config.begin(&czas,&hw);
  
-  czas.begin(config.sysConf.ntpHost,config.sysConf.ntpOffset);
-  LittleFS.begin();
+  czas.begin(config.sysConf.useNtp,config.sysConf.ntpHost,config.sysConf.ntpOffset);
+ 
   //Serial.println(sysConf.prepareFile());
  
   oled.begin();
   oled.drawNetworkView();
   ac.begin();
   //ESP8266WebServer *pServer=&server;
-  apiServer.begin(&server,&config); 
+  apiServer.begin(&server, &config); 
 }
 
 unsigned long ms=0;
