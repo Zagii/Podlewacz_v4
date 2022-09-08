@@ -6,6 +6,7 @@
 #include <ArduinoJson.h>
 #include <PCF8574.h>
 #include <WiFiUdp.h>
+#include <ListLib.h>
 #include "defy.h"
 #include "autoConnectSetup.h"
 #include "oled.h"
@@ -29,9 +30,12 @@ bool whileCPLoop(void);
 AutoConnectSetup ac(server,whileCPLoop);
 ApiServer apiServer;
 
-
+#define LOOP_SMA_ILOSC 10
+unsigned long loop_ms=0, loop_sma=0,loop_sum=0,loop_msStart=0;
+uint32_t freeMemLow;
 
 void setup() {
+  freeMemLow=ESP.getFreeHeap();
   delay(1000);
   Serial.begin(115200);
   Serial.println();
@@ -61,12 +65,14 @@ bool whileCPLoop(void) {
   // Here, something to process while the captive portal is open.
   // To escape from the captive portal loop, this exit function returns false.
   // rc = true;, or rc = false;
-   hw.loop();
+   //hw.loop();
+    
     czas.loop();
+    config.loop();
     if(millis()-ms>300)
     {
       ms=millis();
-      oled.drawTimeView(czas.getTimeStringRTC(),czas.getTimeStringNTP());
+      oled.drawTimeView(czas.getTimeStringRTC(),czas.getTimeStringNTP(),loop_sma,freeMemLow);
     }
   return rc;
 }
@@ -74,8 +80,19 @@ bool whileCPLoop(void) {
 
 void loop() 
 {
-    
-    ac.loop();
+ loop_msStart=micros();   
+  
+  ac.loop();
+ 
   //  delay(5);
-   whileCPLoop();
+  whileCPLoop();
+  // liczenie srednich przebiegow petli loop
+  loop_ms=micros()-loop_msStart;
+  loop_sma=loop_ms;
+  //loop_sum=loop_sum - loop_sum/LOOP_SMA_ILOSC;  //odejmuje srednia wartosc od sumy
+  //loop_sum+=loop_ms; // dodaje ostatni czas
+  //loop_sma=loop_sum/LOOP_SMA_ILOSC; //licze czas z n przebiegów
+  uint32_t freeMem=ESP.getFreeHeap();
+  if(freeMem<freeMemLow) freeMemLow=freeMem;
+
 }

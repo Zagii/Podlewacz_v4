@@ -28,6 +28,9 @@ void ApiServer::restGetConf(uint8_t typConf)
             resp=config->sekcjeConf.prepareFile();
         break;
         case API_TYP_CONF_PROGRAMY: 
+            retCode=200;
+            contentType="text/json";
+            resp=config->programConf.getProgramyJsonString(true);
         break;
     };
             server->send(retCode, contentType, resp);   
@@ -98,6 +101,30 @@ void ApiServer::restSetSekcjeStan()
         server->send(500, "text/plain", "Error setSekcjeStan");
     }
 }
+void ApiServer::restSetProgram()
+{
+    if(!testArgs()) return;
+    if(config->programConf.addProgramAndSaveFile(server->arg("plain")))
+    {
+        server->send(200, "text/json", config->programConf.getProgramyJsonString(true));
+    }else
+    {
+        server->send(500, "text/plain", "Error setProgram");
+    }
+
+}
+void ApiServer::restDelProgram()
+{
+    if(!testArgs()) return;
+    if(config->programConf.delProgramFromJsonString(server->arg("plain")))
+    {
+        server->send(200, "text/json", config->programConf.getProgramyJsonString(true));
+    }else
+    {
+        server->send(500, "text/plain", "Error setProgram");
+    }
+
+}
 void ApiServer::restServerRouting() 
 {
           //  server->on("/", HTTP_GET, []() {
@@ -109,12 +136,16 @@ void ApiServer::restServerRouting()
             server->on("/get", HTTP_GET,[this](){restGetConf(API_TYP_CONF);});
             server->on("/get/system", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SYSTEM);});
             server->on("/get/sekcje", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SEKCJE);});
+            server->on("/get/programy", HTTP_GET,[this](){restGetConf(API_TYP_CONF_PROGRAMY);});
             
             /****** set ****/
             server->on("/set/ntp", HTTP_POST,[this](){restSetNtpConf();});
             server->on("/set/sekcje", HTTP_POST,[this](){restSetSekcjeConf();});
             server->on("/set/stan", HTTP_POST,[this](){restSetSekcjeStan();});
-            
+            server->on("/set/program", HTTP_POST,[this](){restSetProgram();});
+
+            /****** delete *****/
+            server->on("/del/program", HTTP_DELETE, [this](){restDelProgram();});
 
             server->on("/root", [this](){rootPage();});
             server->on(F("/api"), HTTP_GET, [this]{getApi();});

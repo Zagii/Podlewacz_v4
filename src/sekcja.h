@@ -23,8 +23,8 @@ class Sekcja
     uint8_t offStan=LOW;
     bool stan=false;
     bool autoSwitchActive=false;
-    unsigned long timeToSwich;
-    bool stateToSwich;
+    unsigned long timeToSwitch;
+    bool stateToSwitch;
     unsigned long lastStateChanged=0;
     
        
@@ -89,26 +89,27 @@ class Sekcja
     void setOnForTime(long onForSeconds)
     {
         autoSwitchActive=true;
-        stateToSwich=false;
+        stateToSwitch=false;
         setState(true);
-        timeToSwich=onForSeconds*1000;
+        timeToSwitch=onForSeconds*1000;
     };
     void setOffForTime(long offForSeconds)
     {
         autoSwitchActive=true;
-        stateToSwich=true;
+        stateToSwitch=true;
         setState(false);
-        timeToSwich=offForSeconds*1000;
+        timeToSwitch=offForSeconds*1000;
     };
     
     void loop()
     {
         if(autoSwitchActive)
         {
-            if(millis()-lastStateChanged>timeToSwich)
+            if(millis()-lastStateChanged>timeToSwitch)
             {
+                Serial.printf("autoSwitch, sekcjaId: %d, zmiana na: %d\n",id,stateToSwitch?1:0);
                 autoSwitchActive=false;
-                setState(stateToSwich);
+                setState(stateToSwitch);
             }
         }
 
@@ -123,8 +124,8 @@ class Sekcja
         doc["autoSwitchActive"]=autoSwitchActive;
         if(autoSwitchActive)
         {
-            doc["timeToSwitch"]= timeToSwich;
-            doc["stateToSwitch"]= stateToSwich;
+            doc["timeToSwitch"]= timeToSwitch;
+            doc["stateToSwitch"]= stateToSwitch;
         }
         doc["lastStateChanged"]= lastStateChanged;
         serializeJson(doc, ret);

@@ -12,13 +12,14 @@ void OTAStart() {
 
     void OTAEnd() {
         Serial.println("\nEnd");
-         oled.drawText("koniec aktualizacji, sukces",2);
+         oled.drawText("Koniec\nwgrywania\nfirmware,\nsukces",2);
+         delay(1500);
        
     };
     void OTAProgress(unsigned int amount, unsigned int size) {
         Serial.printf("Progress: %u(%u)\r", amount, size);
         double proc= (double)(amount) / (double)ESP.getFlashChipSize()*100;
-        String s=String("Postep: ")+ String(amount) + String(" / ")+String(ESP.getFlashChipSize())+String( "-")+ String(proc,1)+String("%.");
+        String s=String("Wgrywanie \nfirmware,\npostep: \n")+ String(proc,0)+String("%");
         oled.drawText(s,2); 
     };
 
@@ -59,6 +60,7 @@ class AutoConnectSetup{
        
         AutoConnectConfig config;
         portal.whileCaptivePortal(whileCP);
+        config.autoReconnect = true;
        // config.retainPortal = true;
         //config.menuItems = AC_MENUITEM_OPENSSIDS | AC_MENUITEM_RESET | AC_MENUITEM_HOME;
         config.hostName=name;
@@ -84,6 +86,7 @@ class AutoConnectSetup{
        
         portal.onConnect(onConnect);  // Register the ConnectExit function
         portal.config(config);
+        Serial.println(F("AC portal config"));
         if (portal.begin()) {
             Serial.println("WiFi connected: " + WiFi.localIP().toString());
         }

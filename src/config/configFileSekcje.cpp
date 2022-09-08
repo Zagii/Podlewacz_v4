@@ -16,7 +16,7 @@ void ConfigFileSekcje::loop()
 bool ConfigFileSekcje::parseFile(String json)
 {
             Serial.println("Parsowanie pliku sekcji");//Serial.println(filename);
-            StaticJsonDocument<JSON_SIZE> doc;
+            StaticJsonDocument<JSON_SIZE_SEKCJE> doc;
             DeserializationError error = deserializeJson(doc, json);
             if (error) {
                      Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
@@ -69,7 +69,7 @@ bool ConfigFileSekcje::setSekcjeConfig(String json)
 {
     Serial.println("ConfigFileSekcje::setSekcjeConfig");
     //todo podwojne parsowanie nie jest zbyt optymalne do zastanowienia na pozniej
-    StaticJsonDocument<JSON_SIZE> doc;
+    StaticJsonDocument<JSON_SIZE_SEKCJE> doc;
     DeserializationError error = deserializeJson(doc, json);
     if (error) {
                      Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
@@ -105,7 +105,7 @@ bool ConfigFileSekcje::setSekcjeStan(String json)
     //todo podwojne parsowanie nie jest zbyt optymalne do zastanowienia na pozniej
 
 
-    StaticJsonDocument<JSON_SIZE> doc;
+    StaticJsonDocument<JSON_SIZE_SEKCJE> doc;
     DeserializationError error = deserializeJson(doc, json);
     if (error) {
                      Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
@@ -145,7 +145,7 @@ bool ConfigFileSekcje::setSekcjeStan(String json)
 String ConfigFileSekcje::getSekcjeStan()
 {
     String ret="";
-    StaticJsonDocument<JSON_SIZE> doc;
+    StaticJsonDocument<JSON_SIZE_SEKCJE> doc;
     JsonArray stany = doc.createNestedArray("stany");
     for(int i=0;i<liczbaSekcji;i++)
     {

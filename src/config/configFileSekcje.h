@@ -1,5 +1,5 @@
-#ifndef CONFIGURATION_FS_H
-#define CONFIGURATION_FS_H
+#ifndef CONFIG_FILE_SEKCJE_H
+#define CONFIG_FILE_SEKCJE_H
 
 //#include "apiServer.h"
 #include "hardwareOutput.h"
@@ -7,7 +7,7 @@
 #include "sekcja.h"
 
 
-#define JSON_SIZE 512
+#define JSON_SIZE_SEKCJE 1024
 #define TAG_CONFIG_FILE_SEKCJE "sekcje"
 
 #define MAX_LICZBA_SEKCJI 16

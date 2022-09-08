@@ -15,7 +15,7 @@
 #define MQTT_PWD_DEF ""
 
 
-#define JSON_SIZE 512
+#define JSON_SIZE_SYSTEM 512
 #define TAG_CONFIG_FILE_SYSTEM "system"
 
 class ConfigFileSystem : public ConfigFS
@@ -43,7 +43,7 @@ class ConfigFileSystem : public ConfigFS
         virtual bool parseFile(String json)
         {
             Serial.println("Parsowanie pliku ");//Serial.println(filename);
-            StaticJsonDocument<JSON_SIZE> doc;
+            StaticJsonDocument<JSON_SIZE_SYSTEM> doc;
             DeserializationError error = deserializeJson(doc, json);
             if (error) {
                      Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
@@ -69,7 +69,7 @@ class ConfigFileSystem : public ConfigFS
         virtual String prepareFile()
         {   
             String ret="";
-            StaticJsonDocument<JSON_SIZE> doc;
+            StaticJsonDocument<JSON_SIZE_SYSTEM> doc;
             doc["tag"]= TAG_CONFIG_FILE_SYSTEM;
             doc["ntpHost"] =ntpHost;
             doc["ntpOffset"] =  ntpOffset;

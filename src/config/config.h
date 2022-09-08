@@ -5,6 +5,7 @@
 #include "hardwareOutput.h"
 #include "configFileSystem.h"
 #include "configFileSekcje.h"
+#include "configFileProgram.h"
 
 class Config
 {
@@ -13,6 +14,7 @@ class Config
     public:
       ConfigFileSystem sysConf{"/sys.json"};
       ConfigFileSekcje sekcjeConf{"/sekcje.json"};
+      ConfigFileProgram programConf{"/programy.csv","/sekwencje.csv"};
       Config(){};
       void begin(Czas* _czas,HardwareOutput* _hw);
       void loop();

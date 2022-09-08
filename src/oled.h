@@ -441,14 +441,18 @@ void testanimate(const uint8_t *bitmap, uint8_t w, uint8_t h) {
       display.print(F("NTP: "));display.println(ntp);
       display.display();
   };
-  void drawTimeView(String rtc,String ntp)
+  void drawTimeView(String rtc,String ntp,unsigned long loop_sma,uint32_t freeMemLow)
   {
       display.clearDisplay();
       display.setTextSize(2);             // Normal 1:1 pixel scale
       display.setTextColor(WHITE);        // Draw white text
       display.setCursor(0,0);             // Start at top-left corner
-      display.print(F("RTC: "));display.println(rtc);
-      display.print(F("NTP: "));display.println(ntp);
+      display.println("Status\n");
+      display.setTextSize(1);
+      display.println(WiFi.localIP().toString());
+      display.println(ntp);
+      display.print(F("micros: "));display.println(loop_sma);
+      display.print(F("mem: "));display.print(ESP.getFreeHeap());display.print("/");display.println(freeMemLow);
       display.display();
   };
   void drawText(String txt, int size)

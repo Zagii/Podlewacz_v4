@@ -20,6 +20,10 @@ class ApiServer
         void restSetNtpConf();
         void restSetSekcjeConf();
         void restSetSekcjeStan();
+        void restSetProgram();
+
+        void restDelProgram();
+
         void rootPage();
         void getHelloWord();
         bool testArgs();
