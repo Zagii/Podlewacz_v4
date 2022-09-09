@@ -1,23 +1,35 @@
 #ifndef CONFIG_FILE_PROGRAM_H
 #define CONFIG_FILE_PROGRAM_H
 
-//#include <ListLib.h>
+#include <LittleFS.h>
 #include<ArduinoJson.h>
 #include "program.h"
-#include "configFS.h"
+#include "sekwencja.h"
 
-#define JSON_SIZE_PROGRAM 512
+//#include "configFS.h"
+
+//#define JSON_SIZE_PROGRAM 512
 #define TAG_CONFIG_FILE_PROGRAMY "programy"
+#define TAG_CONFIG_FILE_SEKWENCJE "sekwencje"
 
 #define MAX_PROGRAM_SZT 16
+#define MAX_SEKWENCJE_SZT 30
+
+#define TYP_PROGRAM 0
+#define TYP_SEKCJA 1
+
 
 class ConfigFileProgram //: public ConfigFS
 {   
         int getFirstEmptyProgramId();
         uint8_t getProgramById(uint8_t id);
+        int getFirstEmptySekwencjaId();//todo do testu
+        uint8_t getSekwencjaById(uint8_t id);//todo do testu
     public:
         Program* programyTab[MAX_PROGRAM_SZT];
         uint8_t liczbaProgramow=0;
+        Sekwencja *sekwencjeTab[MAX_SEKWENCJE_SZT];
+        uint8_t liczbaSekwencji=0;
         char filenameProgramy[16];
         char filenameSekwencje[16];
         ConfigFileProgram(const char* _fileProgramy, const char* _fileSekwencje)/*:ConfigFS(file)*/
@@ -29,28 +41,38 @@ class ConfigFileProgram //: public ConfigFS
         {
                 for(int i=0;i<liczbaProgramow;i++) delete programyTab[i];
                 liczbaProgramow=0;
+                for(int i=0;i<liczbaSekwencji;i++) delete sekwencjeTab[i];
+                liczbaSekwencji=0;
         };
-        int loadProgramsFromFile(); //todo do testu
-        int saveProgramsToFile();   //todo do testu
-     //   virtual bool parseFile(String json);
-       // virtual String prepareFile();
-        void begin(){loadProgramsFromFile();};   //todo do testu
+        int loadProgramsFromFile(); 
+        int saveProgramsToFile();   
+        
+        void begin()
+        {
+            loadProgramsFromFile();
+            loadSekwencjeFromFile();
+        };   //todo do testu
         void loop(){};
         //todo
-        bool addProgram(String json);   //todo do testu
-        bool addProgramAndSaveFile(String json);   //todo do testu
+        bool addProgram(String json);   
+        bool addProgramAndSaveFile(String json);   
 
-        String getProgramyJsonString(bool dodajLastRunProgramu=false);   //todo do testu
-        //getProgramById(uint8_t id);
-        bool changeProgramFromJsonString(String json);   //todo do testu
+        String getProgramyJsonString(bool dodajLastRunProgramu=false);   
+        bool changeProgramFromJsonStringAndSaveFile(String json);   
         bool delProgramFromJsonString(String json);
-        bool delProgram(uint8_t id);   //todo do testu
-        //addProgramSekwencja
+        bool delProgram(uint8_t id);   
+        
+        int loadSekwencjeFromFile(); //todo do testu
+        int saveSekwencjeToFile(); //todo do testu
+
+        String getSekwencjeJsonString(bool dodajLastRunSekwencji=false);  //todo do testu
+        bool addSekwencja(String json);   //todo do testu
+        bool addSekwencjaAndSaveFile(String json);      //todo do testu
+        
+        
         //changeProgramSekwencja
         //delProgramSekwencja
-        
-       // void addSekwencje(String json);
-       // String getProgramString();
+   
 
 };
 #endif

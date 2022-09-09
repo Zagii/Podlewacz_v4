@@ -19,18 +19,23 @@ void ApiServer::restGetConf(uint8_t typConf)
             return;
         case API_TYP_CONF_SYSTEM: 
             retCode=200;
-            contentType="text/json";
+            contentType=API_TYPE_JSON;
             resp=config->sysConf.prepareFile();
         break;
         case API_TYP_CONF_SEKCJE: 
             retCode=200;
-            contentType="text/json";
+            contentType=API_TYPE_JSON;
             resp=config->sekcjeConf.prepareFile();
         break;
         case API_TYP_CONF_PROGRAMY: 
             retCode=200;
-            contentType="text/json";
+            contentType=API_TYPE_JSON;
             resp=config->programConf.getProgramyJsonString(true);
+        break;
+        case API_TYP_CONF_SEKWENCJE: 
+            retCode=200;
+            contentType=API_TYPE_JSON;
+            resp=config->programConf.getSekwencjeJsonString(true);
         break;
     };
             server->send(retCode, contentType, resp);   
@@ -38,15 +43,15 @@ void ApiServer::restGetConf(uint8_t typConf)
 bool ApiServer::testArgs()
 {
     Serial.println(printRequestToString());
-    if (server->hasArg("plain")== false){ //Check if body received
+    if (server->hasArg(API_PARAM_NAME)== false){ //Check if body received
  
-            server->send(400, "text/plain", "Body not received");
+            returnError(__FUNCTION__);
             return false;
  
     }
     
     String message = "mam body, params:\n";
-             message += server->arg("plain");
+             message += server->arg(API_PARAM_NAME);
              message += "\n";
  
      
@@ -57,7 +62,7 @@ void ApiServer::restSetNtpConf()
 {
       if(!testArgs()) return;
       StaticJsonDocument<JSON_SIZE> doc;
-      DeserializationError error = deserializeJson(doc, server->arg("plain"));
+      DeserializationError error = deserializeJson(doc, server->arg(API_PARAM_NAME));
       if (error)
       {
                      Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
@@ -76,52 +81,97 @@ void ApiServer::restSetNtpConf()
             }*/
 
             config->sysConf.setNtpParams(useNTP,ntpHost.c_str(),offset);
-            server->send(200,  "text/json", config->sysConf.prepareFile());
+            server->send(200, API_TYPE_JSON, config->sysConf.prepareFile());
       }
 };
+void ApiServer::returnError(String funkcja)
+{
+        Serial.println(__FUNCTION__);
+        Serial.println(funkcja);
+
+        char errStr[70];
+        strcpy(errStr,"{\"err\":\"Error ");
+     //    Serial.println(errStr);
+        strncat(errStr,funkcja.c_str(),65);
+       //  Serial.println(errStr);
+        strcat(errStr,"\"}");
+       // Serial.println(strlen(errStr));
+        Serial.println(errStr);
+        server->send(500, API_TYPE_JSON, errStr);
+}
 void ApiServer::restSetSekcjeConf()
 {
     if(!testArgs()) return;
-    if(config->sekcjeConf.setSekcjeConfig( server->arg("plain")))
+    if(config->sekcjeConf.setSekcjeConfig( server->arg(API_PARAM_NAME)))
     {
-        server->send(200, "text/json", config->sekcjeConf.prepareFile());
+        server->send(200, API_TYPE_JSON, config->sekcjeConf.prepareFile());
     }else
     {
-        server->send(500, "text/plain", "Error setSekcjeConfig");
+        returnError(__FUNCTION__);
     }
 }
 void ApiServer::restSetSekcjeStan()
 {
     if(!testArgs()) return;
-    if(config->sekcjeConf.setSekcjeStan(server->arg("plain")))
+    if(config->sekcjeConf.setSekcjeStan(server->arg(API_PARAM_NAME)))
     {
-        server->send(200, "text/json", config->sekcjeConf.getSekcjeStan());
+        server->send(200, API_TYPE_JSON, config->sekcjeConf.getSekcjeStan());
     }else
     {
-        server->send(500, "text/plain", "Error setSekcjeStan");
+       // server->send(500, "text/plain", "Error setSekcjeStan");
+        returnError(__FUNCTION__);
     }
 }
 void ApiServer::restSetProgram()
 {
     if(!testArgs()) return;
-    if(config->programConf.addProgramAndSaveFile(server->arg("plain")))
+    if(config->programConf.addProgramAndSaveFile(server->arg(API_PARAM_NAME)))
     {
-        server->send(200, "text/json", config->programConf.getProgramyJsonString(true));
+        server->send(200, API_TYPE_JSON, config->programConf.getProgramyJsonString(true));
     }else
     {
-        server->send(500, "text/plain", "Error setProgram");
+        //server->send(500, "text/plain", "Error setProgram");
+         returnError(__FUNCTION__);
+    }
+
+}
+void ApiServer::restSetSekwencja()
+{
+    if(!testArgs()) return;
+    if(config->programConf.addSekwencjaAndSaveFile(server->arg(API_PARAM_NAME)))
+    {
+        server->send(200, API_TYPE_JSON, config->programConf.getSekwencjeJsonString(true));
+    }else
+    {
+        //server->send(500, "text/plain", "Error setProgram");
+         returnError(__FUNCTION__);
+    }
+
+}
+void ApiServer::restChangeProgram()
+{
+    if(!testArgs()) return;
+    if(config->programConf.changeProgramFromJsonStringAndSaveFile(server->arg(API_PARAM_NAME)))
+    {
+        server->send(200, API_TYPE_JSON, config->programConf.getProgramyJsonString(true));
+    }else
+    {
+        //server->send(500, "text/plain", "Error setProgram");
+         returnError(__FUNCTION__);
     }
 
 }
 void ApiServer::restDelProgram()
 {
     if(!testArgs()) return;
-    if(config->programConf.delProgramFromJsonString(server->arg("plain")))
+    if(config->programConf.delProgramFromJsonString(server->arg(API_PARAM_NAME)))
     {
-        server->send(200, "text/json", config->programConf.getProgramyJsonString(true));
+        server->send(200, API_TYPE_JSON, config->programConf.getProgramyJsonString(true));
     }else
     {
-        server->send(500, "text/plain", "Error setProgram");
+        Serial.println("blad");
+        //server->send(500, "text/plain", "Error setProgram");
+         returnError(__FUNCTION__);
     }
 
 }
@@ -137,12 +187,17 @@ void ApiServer::restServerRouting()
             server->on("/get/system", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SYSTEM);});
             server->on("/get/sekcje", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SEKCJE);});
             server->on("/get/programy", HTTP_GET,[this](){restGetConf(API_TYP_CONF_PROGRAMY);});
+            server->on("/get/sekwencje", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SEKWENCJE);});
             
             /****** set ****/
             server->on("/set/ntp", HTTP_POST,[this](){restSetNtpConf();});
             server->on("/set/sekcje", HTTP_POST,[this](){restSetSekcjeConf();});
             server->on("/set/stan", HTTP_POST,[this](){restSetSekcjeStan();});
             server->on("/set/program", HTTP_POST,[this](){restSetProgram();});
+            server->on("/set/sekwencja", HTTP_POST,[this](){restSetSekwencja();});
+
+            /********* change *********/
+            server->on("/set/program", HTTP_PUT,[this](){restChangeProgram();});
 
             /****** delete *****/
             server->on("/del/program", HTTP_DELETE, [this](){restDelProgram();});
@@ -165,7 +220,7 @@ void ApiServer::rootPage()
 };
 void ApiServer::getHelloWord() 
 {
-            server->send(200, "text/json", "{\"name\": \"Hello world\"}");
+            server->send(200, API_TYPE_JSON, "{\"name\": \"Hello world\"}");
     
 };
 String ApiServer::printRequestToString()

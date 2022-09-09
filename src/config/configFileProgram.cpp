@@ -1,8 +1,208 @@
 #include "configFileProgram.h"
 
+
+int ConfigFileProgram::loadSekwencjeFromFile()
+{
+    Serial.println(__PRETTY_FUNCTION__);
+    File file =LittleFS.open(filenameSekwencje, "r");
+    String str="";
+    int r=0;
+    if (file) 
+    {
+        while(file.available())
+        {
+            str=file.readStringUntil('\n');//.readString();
+            Serial.println(str);
+            Sekwencja *sek=new Sekwencja();
+            r=sek->setSekwencjaFromCSV(str);
+            if(r<0) 
+            {
+                delete sek;  // ignorowanie blednych zapisow programow
+                r=-1;
+            }
+            if(liczbaSekwencji<MAX_SEKWENCJE_SZT && r>=0)
+            {
+                sekwencjeTab[liczbaSekwencji]=sek;
+                liczbaSekwencji++;
+                Serial.printf("Wczytano sekwencja id: %d, sekcja: %d ", sek->getSekwencjaId(),sek->getSekcjaId());
+                Serial.println(str);
+                Serial.println(sek->getSekwencjaJsonString());
+            }else
+            {
+                Serial.println(F("ERROR. MAX liczba sekwencji"));
+                delete sek;
+                r=-2;
+            }
+        }
+        file.close();
+    }else r=-3;
+
+    return r; 
+}
+int ConfigFileProgram::saveSekwencjeToFile()
+{
+    Serial.println(__PRETTY_FUNCTION__);
+    bool wykryteZmiany=false;
+    int r=0;
+    if(!LittleFS.exists(filenameSekwencje)) 
+    {
+        Serial.println(F("brak pliku sekwencje"));
+        wykryteZmiany=true;
+    }
+    
+    /********** wykrywanie zmian **************/    
+        File file =LittleFS.open(filenameSekwencje, "r");
+        String str="";
+        String str2="";
+        
+        if (file) 
+        {
+            Serial.println(F("Plik sekwencje otwarty - porownanie"));
+            int i=0;
+            while(file.available())
+            {
+                str=file.readStringUntil('\n');//.readString();
+                if(i>= liczbaSekwencji)
+                {
+                    wykryteZmiany=true;
+                    break;
+                }
+                str2=sekwencjeTab[i]->getSekwencjaCSVString();
+                Serial.print(F("str  "));Serial.println(str);
+                Serial.print(F("str2 "));Serial.println(str2);
+                if(!str.equals(str2))
+                {
+                    Serial.print(F("-- Wykryte zmiany w id: "));Serial.println(i);
+                    wykryteZmiany=true;
+                    break;
+                }
+                i++;
+            }
+            if(i==0)// pusty plik
+            {
+                wykryteZmiany=true;
+            }
+        }
+        file.close();
+        /********** wykrywanie zmian koniec**************/
+        if(wykryteZmiany)
+        {
+            Serial.println(F("Poczatek zapisu"));
+            File f=LittleFS.open(filenameSekwencje,"w");
+            if(f)
+            {           
+                Serial.println(F("-- Plik otwarty"));
+                for(int j=0;j<liczbaSekwencji;j++)
+                {   
+                    Serial.print(F("--- Zapis: "));
+                    str=sekwencjeTab[j]->getSekwencjaCSVString();
+                    f.println(str);
+                    Serial.println(str);
+                }
+                return 0;
+            }else 
+            { 
+                Serial.println(F("-- err, zapisu sekwencji"));
+                return -1;
+            }
+            f.close();
+        }else
+        { 
+            Serial.println("Brak zmian, nie zapisuje sekwencji");
+            return 1;
+        }
+    return r;
+}   
+
+String ConfigFileProgram::getSekwencjeJsonString(bool dodajLastRunSekwencji)
+{
+    Serial.print(__PRETTY_FUNCTION__);
+    String ret="{\"tag\":\""+String(TAG_CONFIG_FILE_SEKWENCJE)+"\",\"Sekwencje\":[";
+    
+    for(int i=0;i<liczbaSekwencji;i++)
+    { 
+        ret+= String(sekwencjeTab[i]->getSekwencjaJsonString(dodajLastRunSekwencji));
+        if(i<liczbaSekwencji-1)ret+=",";
+    }
+    ret+="]}"; Serial.print(": ");Serial.println(ret);
+    return ret;
+}
+bool ConfigFileProgram::addSekwencja(String json)
+{
+    Serial.println(__PRETTY_FUNCTION__);
+    if(liczbaSekwencji>= MAX_SEKWENCJE_SZT) 
+    {
+        Serial.println(F("Brak miejsca na nowa sekwencje"));
+        return false;
+    }
+    Sekwencja* sek=new Sekwencja();
+    int pierwszeWolneId=getFirstEmptySekwencjaId();
+    bool r=sek->parseSekwencjaFromJson(json,pierwszeWolneId);
+    Serial.println(sek->getSekwencjaCSVString());
+    if(r)
+    {   
+        sekwencjeTab[liczbaSekwencji]=sek;
+        Serial.println(F("Sekwencje dodano"));
+        liczbaSekwencji++;
+                  
+    }else
+    {
+        Serial.println(F("Bledny json sekwencja"));
+        delete sek;
+        return false;
+    }         
+    return true;
+}   
+bool ConfigFileProgram::addSekwencjaAndSaveFile(String json)
+{
+    Serial.println(__PRETTY_FUNCTION__);
+    if(addSekwencja(json))
+    {
+        return saveSekwencjeToFile()==0? true:false;
+        
+    }else 
+    {
+        return false;
+    }
+}
+int  ConfigFileProgram::getFirstEmptySekwencjaId()
+{
+    Serial.print(__PRETTY_FUNCTION__);
+    int r=0;
+    while(true)
+    {
+        int i=getSekwencjaById(r);
+        if(i==ID_SEKWENCJI_NIEZNANE)
+        {
+            Serial.printf("id: %d, wolne\n",r);
+            break;
+        }
+        Serial.printf("id: %d, jest na indeksie: %d\n",r,i);
+        r++;
+    }
+    Serial.printf("zwracam id: %d\n",r);
+    return r;
+}
+uint8_t  ConfigFileProgram::getSekwencjaById(uint8_t id)
+{
+    uint8_t r=ID_SEKWENCJI_NIEZNANE;
+    Serial.print(__PRETTY_FUNCTION__);Serial.println(id);
+    for(int i=0;i<liczbaSekwencji;i++)
+    { 
+        if(sekwencjeTab[i]->getSekwencjaId()==id)
+        {
+            r = i;
+            break;
+        }
+    }
+    Serial.print(F(", index: "));Serial.println(r);
+    return r;
+}
+/********************************* programy ********************************/
+
 int ConfigFileProgram::loadProgramsFromFile()
 {
-    Serial.println(__FUNCTION__);
+    Serial.println(__PRETTY_FUNCTION__);
     File file =LittleFS.open(filenameProgramy, "r");
     String str="";
     int r=0;
@@ -13,7 +213,7 @@ int ConfigFileProgram::loadProgramsFromFile()
             str=file.readStringUntil('\n');//.readString();
             Serial.println(str);
             Program *prog=new Program();
-            int r=prog->setProgramFromCSV(str);
+            r=prog->setProgramFromCSV(str);
             if(r<0) 
             {
                 delete prog;  // ignorowanie blednych zapisow programow
@@ -40,7 +240,7 @@ int ConfigFileProgram::loadProgramsFromFile()
 };
 int ConfigFileProgram::saveProgramsToFile()
 {
-    Serial.println(__FUNCTION__);
+    Serial.println(__PRETTY_FUNCTION__);
     bool wykryteZmiany=false;
     int r=0;
     if(!LittleFS.exists(filenameProgramy)) 
@@ -67,8 +267,8 @@ int ConfigFileProgram::saveProgramsToFile()
                     break;
                 }
                 str2=programyTab[i]->getProgramCSVString();
-                Serial.println(str);
-                Serial.println(str2);
+                Serial.print(F("str  "));Serial.println(str);
+                Serial.print(F("str2 "));Serial.println(str2);
                 if(!str.equals(str2))
                 {
                     Serial.print(F("-- Wykryte zmiany w id: "));Serial.println(i);
@@ -112,16 +312,11 @@ int ConfigFileProgram::saveProgramsToFile()
         }
     return r;
 };
-/*
-String ConfigFileProgram::prepareFile()
-{   
-    Serial.println("configFileProgram::prepareFile ");
-    return getProgramyJsonString();
-};*/
+
 
 String ConfigFileProgram::getProgramyJsonString(bool dodajLastRunProgramu)
 {
-    Serial.print(__FUNCTION__);
+    Serial.print(__PRETTY_FUNCTION__);
     String ret="{\"tag\":\""+String(TAG_CONFIG_FILE_PROGRAMY)+"\",\"Programy\":[";
     
     for(int i=0;i<liczbaProgramow;i++)
@@ -132,57 +327,11 @@ String ConfigFileProgram::getProgramyJsonString(bool dodajLastRunProgramu)
     ret+="]}"; Serial.print(": ");Serial.println(ret);
     return ret;
 }
-/*
-bool ConfigFileProgram::parseFile(String json)
-{
-            Serial.println("Parsowanie pliku program");//Serial.println(filenameProgramy);
-            StaticJsonDocument<JSON_SIZE> doc;
-            DeserializationError error = deserializeJson(doc, json);
-            if (error) {
-                     Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
-                     return false;
-                }
-            else
-            {
-                if(!doc.containsKey("Programy"))
-                {
-                    
-                    Serial.println(F("Brak obiektu Programy w konfiguracji pliku"));
-                    return false;
-                   // liczbaSekcji=0;
-                }else
-                {
-                    JsonArray pArr= doc["Programy"].as<JsonArray>();
-                    for (JsonObject g : pArr)
-                    {
-                        String s="";
-                        serializeJson(g,s);
-                        addProgram(s);
-                    }
 
-                 //   liczbaSekcji=sekcjeTab.size();
-                //    Serial.print("Zapisanych w pliku: "); Serial.print(liczbaSekcji); Serial.println(" sekcji");
-                //    int i=0;
-                 //   for (JsonObject repo : sekcjeTab)
-                  //  {
-                     
-                  //  }
-                }
-                
-
-            }
-            
-            return true;
-};*/
-/*
-bool parseProgramFromCSV(String csv)
-{
-
-}*/
 
 bool ConfigFileProgram::addProgramAndSaveFile(String json)
 {
-    Serial.println(__FUNCTION__);
+    Serial.println(__PRETTY_FUNCTION__);
     if(addProgram(json))
     {
         return saveProgramsToFile()==0? true:false;
@@ -194,40 +343,27 @@ bool ConfigFileProgram::addProgramAndSaveFile(String json)
 }
 int ConfigFileProgram::getFirstEmptyProgramId()
 {
-    Serial.print(__FUNCTION__);
-    int r=0;//liczbaProgramow;
-    Serial.printf("liczbaProgramow: %d\n",liczbaProgramow);
-   
-    for(int k=0;k<liczbaProgramow;k++)
+    Serial.print(__PRETTY_FUNCTION__);
+    int r=0;
+    while(true)
     {
-        for(int i=0;i<MAX_PROGRAM_SZT;i++)
+        int i=getProgramById(r);
+        if(i==ID_PROGRAMU_NIEZNANE)
         {
-            if(programyTab[k]->id==i)
-            {
-                // jest program o tym id
-                Serial.printf("k: %d, id: %d, zajete, r= %d, zmiana r na: %d\n",k,i,r,r+1);
-                 r++;
-                break;
-            }else
-            {
-                Serial.printf("k: %d, id: %d, wolne, r= %d\n",k,i,r);
-                // nie ma takiego programu
-                //if(i<r)
-              //  {
-                   
-                    
-                //}
-            }
+            Serial.printf("id: %d, wolne\n",r);
+            break;
         }
+        Serial.printf("id: %d, jest na indeksie: %d\n",r,i);
+        r++;
     }
-    Serial.printf("id: %d\n",r);
+    Serial.printf("zwracam id: %d\n",r);
     return r;
 }
 /* zwraca index programu o zadanym id */
 uint8_t ConfigFileProgram::getProgramById(uint8_t id)
 {
     uint8_t r=ID_PROGRAMU_NIEZNANE;
-     Serial.print(__FUNCTION__);Serial.print(id);
+     Serial.print(__PRETTY_FUNCTION__);Serial.println(id);
     for(int i=0;i<liczbaProgramow;i++)
     { 
         if(programyTab[i]->id==id)
@@ -239,9 +375,9 @@ uint8_t ConfigFileProgram::getProgramById(uint8_t id)
     Serial.print(F(", index: "));Serial.println(r);
     return r;
 }
-bool ConfigFileProgram::changeProgramFromJsonString(String json)
+bool ConfigFileProgram::changeProgramFromJsonStringAndSaveFile(String json)
 {
-    Serial.println(__FUNCTION__);
+    Serial.println(__PRETTY_FUNCTION__);
     if(liczbaProgramow>= MAX_PROGRAM_SZT) 
     {
         Serial.println(F("Program poza zakresem"));
@@ -251,14 +387,20 @@ bool ConfigFileProgram::changeProgramFromJsonString(String json)
     if( tmp->parseProgramFromJson(json))
     {
         uint8_t x=getProgramById(tmp->id);
+        if(x==ID_PROGRAMU_NIEZNANE)
+        {
+            Serial.printf("Program id: %d, nie istnieje\n",x);
+            delete tmp;
+            return false;        
+        }
         programyTab[x]->copyProgram(tmp);
     }
     delete tmp;
-    return true;
+    return saveProgramsToFile()==0;
 }
 bool ConfigFileProgram::addProgram(String json)
 {
-            Serial.println(__FUNCTION__);
+            Serial.println(__PRETTY_FUNCTION__);
             if(liczbaProgramow>= MAX_PROGRAM_SZT) 
             {
                 Serial.println(F("Brak miejsca na nowy program"));
@@ -284,7 +426,7 @@ bool ConfigFileProgram::addProgram(String json)
 };
 bool ConfigFileProgram::delProgramFromJsonString(String json)
 {
-    Serial.println(__FUNCTION__);
+    Serial.println(__PRETTY_FUNCTION__);
     StaticJsonDocument<JSON_SIZE_PROGRAM> doc;
     DeserializationError error = deserializeJson(doc, json);
     if (error) {
@@ -307,7 +449,7 @@ bool ConfigFileProgram::delProgram(uint8_t id)
         return false;
     }
     Serial.print(F("Przed Mem: ")); Serial.println(ESP.getFreeHeap());
-    delete programyTab[index];
+    Program * progUsun=programyTab[index];
     for(int i=index;i<liczbaProgramow-1;i++)
     {
         programyTab[i]=programyTab[i+1];
@@ -315,6 +457,7 @@ bool ConfigFileProgram::delProgram(uint8_t id)
     Serial.println(getProgramyJsonString());
     //delete programyTab[liczbaProgramow];
     liczbaProgramow--;
+    delete progUsun;
     Serial.print(F("Po Mem: ")); Serial.println(ESP.getFreeHeap());
     return saveProgramsToFile() == 0 ? true:false;
     

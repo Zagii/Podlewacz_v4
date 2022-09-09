@@ -10,6 +10,10 @@
 #define API_TYP_CONF_SYSTEM 1
 #define API_TYP_CONF_SEKCJE 2
 #define API_TYP_CONF_PROGRAMY 3
+#define API_TYP_CONF_SEKWENCJE 4
+
+#define API_TYPE_JSON "text/json"
+#define API_PARAM_NAME "plain"
 
 class ApiServer
 {
@@ -21,12 +25,17 @@ class ApiServer
         void restSetSekcjeConf();
         void restSetSekcjeStan();
         void restSetProgram();
+        void restSetSekwencja();
+
+        void restChangeProgram();
 
         void restDelProgram();
 
         void rootPage();
         void getHelloWord();
         bool testArgs();
+
+        void returnError(String funkcja);
     public:
         ApiServer(){ };
         void begin(ESP8266WebServer *_server,Config* _conf);

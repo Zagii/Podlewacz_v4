@@ -5,7 +5,7 @@
 //#include "sekwencja.h"
 
 
-#define JSON_SIZE 512
+#define JSON_SIZE_PROGRAM 256
 
 
 //#define PROGRAM_TYP_DNI 0 //program aktywny tylko w wybrane dni tygodnia

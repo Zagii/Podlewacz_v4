@@ -38,7 +38,7 @@ class AutoConnectSetup{
   
     AutoConnect   portal;
    
-    const char* fw_ver = "0.2";
+    const char* fw_ver = __TIMESTAMP__;
     const char* name="Podlewacz";
     char uniqName[20]="";
     AutoConnect::WhileCaptivePortalExit_ft whileCP;

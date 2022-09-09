@@ -76,8 +76,8 @@ int Program::setProgramFromCSV(String str)
 bool Program::parseProgramFromJson(String json, uint8_t _id)
 {
      
-    Serial.println("Program::parseProgramFromJson");//Serial.println(filename);
-    StaticJsonDocument<JSON_SIZE> doc;
+    Serial.println(__PRETTY_FUNCTION__);//Serial.println(filename);
+    StaticJsonDocument<JSON_SIZE_PROGRAM> doc;
     DeserializationError error = deserializeJson(doc, json);
     if (error) {
          Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
@@ -163,7 +163,7 @@ String Program::getProgramJsonString(bool dodajLastRun)
     ret+="]";
     if(dodajLastRun)
     {
-        ret+=String("\"lastRun\":")+String(lastProgramRun);
+        ret+=String(",\"lastRun\":")+String(lastProgramRun);
     }
     ret+="}";
     return ret;
@@ -173,6 +173,8 @@ bool Program::copyProgram(Program * source)
     id=source->id;
     nazwa=source->nazwa;
     aktywny=source->aktywny;
+    for(int i=0;i<7;i++)
+        dni[i]=source->dni[i];
     liczbaGodzin=source->liczbaGodzin;
     for(int i=0;i<liczbaGodzin;i++)
         godzinyTab[i]=source->godzinyTab[i];
