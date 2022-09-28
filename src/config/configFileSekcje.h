@@ -1,59 +1,81 @@
 #ifndef CONFIG_FILE_SEKCJE_H
 #define CONFIG_FILE_SEKCJE_H
 
-//#include "apiServer.h"
+
+#include <LittleFS.h>
+#include<ArduinoJson.h>
 #include "hardwareOutput.h"
-#include "configFS.h"
+
 #include "sekcja.h"
 
 
-#define JSON_SIZE_SEKCJE 1024
+#define JSON_SIZE_SEKCJE 1512
 #define TAG_CONFIG_FILE_SEKCJE "sekcje"
 
 #define MAX_LICZBA_SEKCJI 16
 
 
-class ConfigFileSekcje : public ConfigFS
+class ConfigFileSekcje
 {
     Sekcja * sekcje[MAX_LICZBA_SEKCJI];
     uint8_t liczbaSekcji=0;
     HardwareOutput *hardwareOutput;
- //   ApiServer* apiServer;
+
+    int getSekcjaById(int id);
+    int getFirstEmptySekcjaId();
+    char filename[16];
     public:
-    
+
      
-        ConfigFileSekcje(const char* file):ConfigFS(file){};
-        void begin(HardwareOutput *_h/*, ApiServer *_api*/);
+        ConfigFileSekcje(const char* _file)
+        {
+            strcpy(filename,_file);
+        };
+        void begin(HardwareOutput *_h);
  
-        virtual bool parseFile(String json);
-        bool setSekcjeConfig(String json);
+    //    virtual bool parseFile(String json);
+        
+        /* ustawia konfiguracje wielu sekcji jednoczesnie */
+      //  bool setSekcjeConfig(String json);
+      
+        /* ustawia kofiguracje jednej sekcji */
+        bool setSekcjaConfig(String json);
+
+        /* ustawia stan wielu sekcji jednocześnie */
         bool setSekcjeStan(String json);
 
+        void setOffSekcjeAll();
+        
+        bool setSekcjaStan(String json);
+        bool setSekcjaStan(uint8_t sekcjaId, bool stan, long secondsToSwitch);
+        
         String getSekcjeStan();
 
         void loop();
         
-        virtual String prepareFile()
+   /*     virtual String prepareFile()
         {   
             Serial.println("configFileSekcje::prepareFile ");
             String ret="";
-            StaticJsonDocument<JSON_SIZE> doc;
+            StaticJsonDocument<JSON_SIZE_SEKCJE> doc;
             doc["tag"]=TAG_CONFIG_FILE_SEKCJE;
             for(int i=0;i<liczbaSekcji;i++)
             {
-                StaticJsonDocument<JSON_SIZE> doc2;
-                DeserializationError error = deserializeJson(doc2, sekcje[i]->prepareConfigJson());
-                if (error) {
-                     Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
-                     return "json error";
-                }
-                doc["Sekcje"].add(doc2.as<JsonObject>());
+              doc["Sekcje"].add(serialized(sekcje[i]->prepareConfigJson()));
             }
             serializeJson(doc, ret);
             return ret;
-        };
+        };*/
         
+        int loadSekcjeFromFile(); 
+        int saveSekcjeToFile(); 
 
+        bool addSekcja(String json);   
+        bool addSekcjaAndSaveFile(String json);      
+        String getSekcjeJsonString();   
+        bool changeSekcjaFromJsonStringAndSaveFile(String json);   
+        bool delSekcjaFromJsonString(String json);
+        bool delSekcja(uint8_t id);     
 };
 
 #endif

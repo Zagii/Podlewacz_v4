@@ -7,24 +7,25 @@ int ConfigFileProgram::loadSekwencjeFromFile()
     File file =LittleFS.open(filenameSekwencje, "r");
     String str="";
     int r=0;
+   
     if (file) 
     {
         while(file.available())
         {
             str=file.readStringUntil('\n');//.readString();
-            Serial.println(str);
+          // Serial.println(str);
             Sekwencja *sek=new Sekwencja();
             r=sek->setSekwencjaFromCSV(str);
-            if(r<0) 
+          /*  if(r<0) 
             {
                 delete sek;  // ignorowanie blednych zapisow programow
                 r=-1;
-            }
+            }*/
             if(liczbaSekwencji<MAX_SEKWENCJE_SZT && r>=0)
             {
                 sekwencjeTab[liczbaSekwencji]=sek;
                 liczbaSekwencji++;
-                Serial.printf("Wczytano sekwencja id: %d, sekcja: %d ", sek->getSekwencjaId(),sek->getSekcjaId());
+                Serial.printf("Wczytano sekwencja id: %d, sekcja: %d ->", sek->getSekwencjaId(),sek->getSekcjaId());
                 Serial.println(str);
                 Serial.println(sek->getSekwencjaJsonString());
             }else
@@ -36,7 +37,7 @@ int ConfigFileProgram::loadSekwencjeFromFile()
         }
         file.close();
     }else r=-3;
-
+    calcCzasTrwaniaProgramow();
     return r; 
 }
 int ConfigFileProgram::saveSekwencjeToFile()
@@ -92,6 +93,7 @@ int ConfigFileProgram::saveSekwencjeToFile()
             if(f)
             {           
                 Serial.println(F("-- Plik otwarty"));
+                calcCzasTrwaniaProgramow();
                 for(int j=0;j<liczbaSekwencji;j++)
                 {   
                     Serial.print(F("--- Zapis: "));
@@ -117,14 +119,15 @@ int ConfigFileProgram::saveSekwencjeToFile()
 String ConfigFileProgram::getSekwencjeJsonString(bool dodajLastRunSekwencji)
 {
     Serial.print(__PRETTY_FUNCTION__);
-    String ret="{\"tag\":\""+String(TAG_CONFIG_FILE_SEKWENCJE)+"\",\"Sekwencje\":[";
+   // String ret="{\"tag\":\""+String(TAG_CONFIG_FILE_SEKWENCJE)+"\",\"Sekwencje\":[";
+     String ret="[";
     
     for(int i=0;i<liczbaSekwencji;i++)
     { 
         ret+= String(sekwencjeTab[i]->getSekwencjaJsonString(dodajLastRunSekwencji));
         if(i<liczbaSekwencji-1)ret+=",";
     }
-    ret+="]}"; Serial.print(": ");Serial.println(ret);
+    ret+="]"; Serial.print(": ");Serial.println(ret);
     return ret;
 }
 bool ConfigFileProgram::addSekwencja(String json)
@@ -198,6 +201,68 @@ uint8_t  ConfigFileProgram::getSekwencjaById(uint8_t id)
     Serial.print(F(", index: "));Serial.println(r);
     return r;
 }
+bool ConfigFileProgram::changeSekwencjaFromJsonStringAndSaveFile(String json)
+{
+    Serial.println(__PRETTY_FUNCTION__);
+    if(liczbaSekwencji>= MAX_SEKWENCJE_SZT) 
+    {
+        Serial.println(F("Sekwencja poza zakresem"));
+        return false;
+    }
+    Sekwencja *tmp=new Sekwencja();
+    if( tmp->parseSekwencjaFromJson(json))
+    {
+        uint8_t x=getSekwencjaById(tmp->getSekwencjaId());
+        if(x==ID_SEKWENCJI_NIEZNANE)
+        {
+            Serial.printf("Sekwencja id: %d, nie istnieje\n",x);
+            delete tmp;
+            return false;        
+        }
+        sekwencjeTab[x]->copySekwencja(tmp);
+    }
+    delete tmp;
+    return saveSekwencjeToFile()==0;
+}
+bool ConfigFileProgram::delSekwencjaFromJsonString(String json)
+{
+    Serial.println(__PRETTY_FUNCTION__);
+    StaticJsonDocument<JSON_SIZE_PROGRAM> doc;
+    DeserializationError error = deserializeJson(doc, json);
+    if (error) {
+         Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
+         return false;
+    }else
+    { 
+       int  idSek=doc["sekwencjaId"] | MAX_SEKWENCJE_SZT;
+       return delSekwencja(idSek);
+    }
+}
+bool ConfigFileProgram::delSekwencja(uint8_t id)
+{
+    Serial.printf("ConfigFileProgram::delSekwencja id: %d wszystkich %d\n",id,liczbaSekwencji);
+    Serial.println(getSekwencjeJsonString());
+    int index=getSekwencjaById(id);
+    if(index>=MAX_SEKWENCJE_SZT) 
+    {
+        Serial.println(F("Blad, sekwencja poza zakresem."));
+        return false;
+    }
+    Serial.print(F("Przed Mem: ")); Serial.println(ESP.getFreeHeap());
+    Sekwencja * sekUsun=sekwencjeTab[index];
+    for(int i=index;i<liczbaSekwencji-1;i++)
+    {
+        sekwencjeTab[i]=sekwencjeTab[i+1];
+    }
+    Serial.println(getSekwencjeJsonString());
+    //delete programyTab[liczbaProgramow];
+    liczbaSekwencji--;
+    delete sekUsun;
+    Serial.print(F("Po Mem: ")); Serial.println(ESP.getFreeHeap());
+    return saveSekwencjeToFile() == 0 ? true:false;
+    
+}
+
 /********************************* programy ********************************/
 
 int ConfigFileProgram::loadProgramsFromFile()
@@ -214,11 +279,11 @@ int ConfigFileProgram::loadProgramsFromFile()
             Serial.println(str);
             Program *prog=new Program();
             r=prog->setProgramFromCSV(str);
-            if(r<0) 
+           /* if(r<0) 
             {
                 delete prog;  // ignorowanie blednych zapisow programow
                 r=-1;
-            }
+            }*/
             if(liczbaProgramow<MAX_PROGRAM_SZT && r>=0)
             {
                 programyTab[liczbaProgramow]=prog;
@@ -317,14 +382,16 @@ int ConfigFileProgram::saveProgramsToFile()
 String ConfigFileProgram::getProgramyJsonString(bool dodajLastRunProgramu)
 {
     Serial.print(__PRETTY_FUNCTION__);
-    String ret="{\"tag\":\""+String(TAG_CONFIG_FILE_PROGRAMY)+"\",\"Programy\":[";
+  //  String ret="{\"tag\":\""+String(TAG_CONFIG_FILE_PROGRAMY)+"\",\"Programy\":[";
+     String ret="[";
     
     for(int i=0;i<liczbaProgramow;i++)
     { 
         ret+= String(programyTab[i]->getProgramJsonString(dodajLastRunProgramu));
         if(i<liczbaProgramow-1)ret+=",";
     }
-    ret+="]}"; Serial.print(": ");Serial.println(ret);
+    ret+="]"; 
+    Serial.print(": ");Serial.println(ret);
     return ret;
 }
 
@@ -462,3 +529,26 @@ bool ConfigFileProgram::delProgram(uint8_t id)
     return saveProgramsToFile() == 0 ? true:false;
     
 }
+void ConfigFileProgram::calcCzasTrwaniaProgramow()
+{
+    for(int i=0; i< liczbaProgramow;i++)
+    {
+        unsigned long c=0;
+        unsigned long cTmp=0;
+        for(int k=0;k< liczbaSekwencji;k++)
+        {
+            //czy sekwencja nalezy do programu
+            if(sekwencjeTab[k]->getProgramId()==programyTab[i]->id)
+            {
+                // c znajdz max(startAkcji+czasTrwaniaAkcji)  
+                cTmp=sekwencjeTab[k]->getStartAkcji()+sekwencjeTab[k]->getCzasTrwaniaAkcji();
+                if(cTmp > c)
+                {
+                    c=cTmp;
+                }
+            }
+            
+        }
+        programyTab[i]->czasTrwaniaProgramu=c;
+    }
+};

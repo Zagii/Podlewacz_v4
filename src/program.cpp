@@ -35,7 +35,7 @@ int Program::setProgramFromCSV(String str)
         if (index == -1) // No space found
         {
             // strs[liczbaPol++] = str;
-            dodajGodzine(pole.toInt());
+            dodajGodzine(str.toInt());
             break;
         }
         else
@@ -84,7 +84,14 @@ bool Program::parseProgramFromJson(String json, uint8_t _id)
          return false;
     }else
     { 
-        id=doc["id"] | _id;
+         if(_id != ID_PROGRAMU_NIEZNANE)
+        {
+            id=_id;
+        }
+        else{
+            id=doc["id"] | _id;
+        }
+        
         nazwa=doc["nazwa"]| String("prog");
        /* if(id==ID_PROGRAMU_NIEZNANE)
         {

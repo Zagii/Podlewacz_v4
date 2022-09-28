@@ -14,6 +14,7 @@
 #include "czas.h"
 #include "apiServer.h"
 #include "sekcja.h"
+#include "manager.h"
 //class ConfigAll;
 
 Oled oled;
@@ -32,6 +33,8 @@ ApiServer apiServer;
 #define LOOP_SMA_ILOSC 10
 unsigned long loop_ms=0, loop_sma=0,loop_sum=0,loop_msStart=0;
 uint32_t freeMemLow;
+
+Manager manager;
 
 void setup() {
   freeMemLow=ESP.getFreeHeap();
@@ -52,7 +55,9 @@ void setup() {
   oled.drawNetworkView();
   ac.begin();
   //ESP8266WebServer *pServer=&server;
-  apiServer.begin(&server, &config); 
+  manager.begin(&czas,&config);
+  apiServer.begin(&server, &config,&manager); 
+ 
 }
 
 unsigned long ms=0;
@@ -73,6 +78,9 @@ bool whileCPLoop(void) {
       ms=millis();
       oled.drawTimeView(czas.getTimeStringRTC(),czas.getTimeStringNTP(),loop_sma,freeMemLow);
     }
+
+    manager.loop();
+
   return rc;
 }
 

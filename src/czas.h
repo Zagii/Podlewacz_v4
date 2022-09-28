@@ -14,7 +14,7 @@ class Czas
     DateTime now;
     bool ntpConnected=false;
     bool useNTP=true;
-    unsigned long rtcLastUpdate;
+    unsigned long rtcLastUpdate=0;
     public:
      Czas(WiFiUDP& ntpUDP):timeClient(ntpUDP){};
      void setNTP(bool isActive,const char* pool,long offset)
@@ -61,6 +61,7 @@ class Czas
         }
         now=rtc.now();
         Serial.println(getTimeStringRTC());
+        loop();
      };
      void loop()
      {

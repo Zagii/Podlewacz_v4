@@ -5,11 +5,13 @@
 
 #define JSON_SIZE_SEKWENCJA 256
 #define ID_SEKWENCJI_NIEZNANE 254
+#define ID_PROGRAMU_NIEZNANE 254
 /* sekwencja programu inaczej pojedynczy krok*/
 class Sekwencja
 {
-        uint8_t sekwencjaId;
+        uint8_t sekwencjaId=ID_SEKWENCJI_NIEZNANE;
         uint8_t sekcjaId;
+        uint8_t programId=ID_PROGRAMU_NIEZNANE;
         bool akcja;
         unsigned long czasTrwaniaAkcji; // gdy czas==0 akcja nie powoduje antyakcji
         unsigned long startAkcji; //start akcji 
@@ -25,13 +27,13 @@ class Sekwencja
         bool getAkcja(){return akcja;};
         unsigned long getCzasTrwaniaAkcji(){return czasTrwaniaAkcji;};
         unsigned long getStartAkcji(){return startAkcji;};
+        uint8_t getProgramId(){return programId;};
 
         String getSekwencjaCSVString();
         bool parseSekwencjaFromJson(String json,uint8_t _id=ID_SEKWENCJI_NIEZNANE);
         int setSekwencjaFromCSV(String csv);
         String getSekwencjaJsonString(bool dodajLastRun=false);
         bool copySekwencja(Sekwencja * source);
-        
 
 };
 

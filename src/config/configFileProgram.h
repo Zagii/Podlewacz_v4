@@ -21,11 +21,12 @@
 
 class ConfigFileProgram //: public ConfigFS
 {   
+      public:
         int getFirstEmptyProgramId();
         uint8_t getProgramById(uint8_t id);
         int getFirstEmptySekwencjaId();//todo do testu
         uint8_t getSekwencjaById(uint8_t id);//todo do testu
-    public:
+  
         Program* programyTab[MAX_PROGRAM_SZT];
         uint8_t liczbaProgramow=0;
         Sekwencja *sekwencjeTab[MAX_SEKWENCJE_SZT];
@@ -47,13 +48,15 @@ class ConfigFileProgram //: public ConfigFS
         int loadProgramsFromFile(); 
         int saveProgramsToFile();   
         
+        void calcCzasTrwaniaProgramow();
+
         void begin()
         {
             loadProgramsFromFile();
             loadSekwencjeFromFile();
-        };   //todo do testu
+        };   
         void loop(){};
-        //todo
+        
         bool addProgram(String json);   
         bool addProgramAndSaveFile(String json);   
 
@@ -62,17 +65,15 @@ class ConfigFileProgram //: public ConfigFS
         bool delProgramFromJsonString(String json);
         bool delProgram(uint8_t id);   
         
-        int loadSekwencjeFromFile(); //todo do testu
-        int saveSekwencjeToFile(); //todo do testu
+        int loadSekwencjeFromFile(); 
+        int saveSekwencjeToFile(); 
 
-        String getSekwencjeJsonString(bool dodajLastRunSekwencji=false);  //todo do testu
-        bool addSekwencja(String json);   //todo do testu
-        bool addSekwencjaAndSaveFile(String json);      //todo do testu
-        
-        
-        //changeProgramSekwencja
-        //delProgramSekwencja
-   
+        bool addSekwencja(String json);   
+        bool addSekwencjaAndSaveFile(String json);      
+        String getSekwencjeJsonString(bool dodajLastRunSekwencji=false);  
+        bool changeSekwencjaFromJsonStringAndSaveFile(String json);   
+        bool delSekwencjaFromJsonString(String json);
+        bool delSekwencja(uint8_t id);     
 
 };
 #endif

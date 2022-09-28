@@ -22,7 +22,8 @@
     */
 class Program 
 {   
-   // void clearSekwencjeList(); 
+    
+    bool czyUruchomiony=false;
     public:
   //  uint8_t typ;
         String nazwa="";
@@ -30,28 +31,40 @@ class Program
         bool dni[7]; // w jakich dniach tygodnia program jest uruchamiany 0-nd,1-pn, ..6-sb
         unsigned long lastProgramRun=0; //data w sekundach od ostatnio uruchomionego programu
         bool aktywny=false; // czy program jest aktywny
-        //unsigned long godzina; // w sekundach godzina rozpoczecia programu
-      //  List<unsigned long> godzinyList;
         int godzinyTab[MAX_ILOSC_URUCHAMIANIA_PROGRAMU_DZIENNIE]; // zapis w formacie zulu hhmm
         uint8_t liczbaGodzin=0;
-       // List<Sekwencja*> sekwencjeList;
-    //   Sekwencja* sekwencjeTab[MAX_ILOSC_SEKWENCJI_W_PROGRAMIE];
-     //  uint8_t liczbaSekwencji=0;
+
+        unsigned long czasTrwaniaProgramu = 0;
+      
    
         Program(){};
-        ~Program()
-        {
-        //   for(int i=0;i<liczbaSekwencji;i++) delete sekwencjeTab[i];
-         //  liczbaSekwencji=0;
-        }
+        ~Program(){   };
         int dodajGodzine(int g);
         String getProgramCSVString();
         bool parseProgramFromJson(String json,uint8_t _id=ID_PROGRAMU_NIEZNANE);
         int setProgramFromCSV(String csv);
         String getProgramJsonString(bool dodajLastRun=false);
         bool copyProgram(Program * source);
-        
-        //void addSekwencje(String json);
+        void setCzasTrwaniaProgramu(unsigned long dt){czasTrwaniaProgramu=dt;}
+        bool czyDzienProgramu(uint8_t nrDnia)
+        {
+          if(nrDnia>6)return false;
+          return dni[nrDnia];
+        };
+        bool czyGodzinaStartuProgramu(int hhmm)
+        {
+          for(int i=0;i<liczbaGodzin;i++)
+          {
+            if(godzinyTab[i]==hhmm)
+            {
+              return true;
+            }
+          }
+          return false;
+        };
+        bool czyProgramUruchomiony(){return czyUruchomiony;};
+        void startProgram(unsigned long czasUruchomieniaSekundy){czyUruchomiony=true;lastProgramRun=czasUruchomieniaSekundy;};
+        void stopProgram(){czyUruchomiony=false;}
         
 
 };

@@ -7,6 +7,8 @@
 #include "configFileSekcje.h"
 #include "configFileProgram.h"
 
+
+
 class Config
 {
     Czas* czas;
@@ -18,6 +20,7 @@ class Config
       Config(){};
       void begin(Czas* _czas,HardwareOutput* _hw);
       void loop();
+      
       
 };
 

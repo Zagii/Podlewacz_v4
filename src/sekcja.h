@@ -14,6 +14,8 @@
 #include <ArduinoJson.h>
 #include "hardwareOutput.h"
 
+#define SEKCJA_ID_BRAK -1
+#define SEKCJA_ID_BLAD -2
 
 class Sekcja
 {
@@ -28,16 +30,11 @@ class Sekcja
     unsigned long lastStateChanged=0;
     
        
-    void setState(bool state);
+   
+    void init();
 
-    void init()
-    {
-            if(inverted){onStan=LOW; offStan=HIGH;}
-            autoSwitchActive=false;
-            setOff();       
-    };
     public:
-     uint8_t id;
+     int id;
      String nazwa;
      int typ;     // fizyczna, wirtualnaREST, wirtualnaMQTT
      uint8_t pin; // pin ktorym steruje
@@ -57,103 +54,29 @@ class Sekcja
     void begin(HardwareOutput *h, uint8_t _id, String _nazwa,int _typ, int _pin,bool _inverted,
         String _apiOnUrl, String _apiOnJson, String _apiOffUrl, String _apiOffJson);
     
+    bool copySekcja(Sekcja * source);
+    /* ustawia konfiguracje sekcji*/
+    int setSekcjaFromJson(String jsonConfig);
+    /* zwraca konfigracje sekcji*/
+    String getSekcjaJsonString();
    
+   /* wysylka rozkazu post do zmiany stanu sekcji restowej */
     int sendPostRequest(String url, String requestData);
     void parseConfig(uint8_t _id, String jsonConfig);
 
     /* odpowiednik z boolean robi wiecej to tylko nakladka */
-    void setState(uint8_t state)
-    {
-        autoSwitchActive=false;
-        setState( state > 0 ? true : false); 
-    };
-    void setOn()
-    {
-        autoSwitchActive=false;
-        setState(true);
-    };
-    void setOff()
-    {
-        autoSwitchActive=false;
-        setState(false);
-    };
-    void setStateForTime(uint8_t state, long secondsToSwitch)
-    {
-        setStateForTime(state>0?true:false,secondsToSwitch);
-    }
-    void setStateForTime(bool state, long secondsToSwitch)
-    {
-        if(state) setOnForTime(secondsToSwitch);
-        else setOffForTime(secondsToSwitch);
-    }
-    void setOnForTime(long onForSeconds)
-    {
-        autoSwitchActive=true;
-        stateToSwitch=false;
-        setState(true);
-        timeToSwitch=onForSeconds*1000;
-    };
-    void setOffForTime(long offForSeconds)
-    {
-        autoSwitchActive=true;
-        stateToSwitch=true;
-        setState(false);
-        timeToSwitch=offForSeconds*1000;
-    };
+    void setState(uint8_t state);
+    void setState(bool state);
+    void setOn();
+    void setOff();
+    void setStateForTime(uint8_t state, long secondsToSwitch);
+    void setStateForTime(bool state, long secondsToSwitch);
+    void setOnForTime(long onForSeconds);
+    void setOffForTime(long offForSeconds);
     
-    void loop()
-    {
-        if(autoSwitchActive)
-        {
-            if(millis()-lastStateChanged>timeToSwitch)
-            {
-                Serial.printf("autoSwitch, sekcjaId: %d, zmiana na: %d\n",id,stateToSwitch?1:0);
-                autoSwitchActive=false;
-                setState(stateToSwitch);
-            }
-        }
-
-    };
+    void loop();
     
-    String getStanJson()
-    {
-        String ret="";
-        StaticJsonDocument<JSON_SIZE> doc;
-        doc["id"]=id;
-        doc["stan"] =stan?"1":"0";
-        doc["autoSwitchActive"]=autoSwitchActive;
-        if(autoSwitchActive)
-        {
-            doc["timeToSwitch"]= timeToSwitch;
-            doc["stateToSwitch"]= stateToSwitch;
-        }
-        doc["lastStateChanged"]= lastStateChanged;
-        serializeJson(doc, ret);
-        return ret;
-    };
-    String prepareConfigJson()
-    {
-        String ret="";
-        StaticJsonDocument<JSON_SIZE> doc;
-        doc["id"]=id;
-        doc["nazwa"]=nazwa;
-        doc["typ"]=typ; //fizyczna, wirtualnaREST, wirtualnaMQTT
-        if(typ==SEKCJA_TYP_FIZYCZNA)
-        {
-            doc["pin"]=pin; //pin ktorym steruje
-        }
-        //todo adres hardware jesli wiecej sekcji niz 8
-        doc["inverted"]=inverted; // odwrocona logika na pinie
-        if(typ==SEKCJA_TYP_REST)
-        {
-            doc["apiOnUrl"]=apiOnUrl;
-            doc["apiOnJson"]=apiOnJson;
-            doc["apiOffUrl"]=apiOffUrl;
-            doc["apiOffJson"]=apiOffJson;
-        }
-        //todo mqtt
-        serializeJson(doc, ret);
-        return ret;
-    };
+    String getStanJson();
+   // String prepareConfigJson();
 };
 #endif

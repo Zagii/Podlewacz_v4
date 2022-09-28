@@ -1,10 +1,12 @@
 #include "apiServer.h"
 
 
-void ApiServer::begin(ESP8266WebServer *_server, Config* _conf)
+void ApiServer::begin(ESP8266WebServer *_server, Config* _conf, Manager* _manager)
 {
             server=_server;
             config=_conf;
+            manager=_manager;
+            server->enableCORS(true);
             restServerRouting();          
 };
 void ApiServer::restGetConf(uint8_t typConf)
@@ -25,7 +27,7 @@ void ApiServer::restGetConf(uint8_t typConf)
         case API_TYP_CONF_SEKCJE: 
             retCode=200;
             contentType=API_TYPE_JSON;
-            resp=config->sekcjeConf.prepareFile();
+            resp=config->sekcjeConf.getSekcjeJsonString();
         break;
         case API_TYP_CONF_PROGRAMY: 
             retCode=200;
@@ -56,6 +58,10 @@ bool ApiServer::testArgs()
  
      
     Serial.println(message);
+        server->sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+        server->sendHeader(F("Access-Control-Max-Age"), F("10000"));
+        server->sendHeader(F("Access-Control-Allow-Methods"), F("PUT,POST,GET,OPTIONS"));
+        server->sendHeader(F("Access-Control-Allow-Headers"), F("*"));
     return true;
 }
 void ApiServer::restSetNtpConf()
@@ -99,6 +105,7 @@ void ApiServer::returnError(String funkcja)
         Serial.println(errStr);
         server->send(500, API_TYPE_JSON, errStr);
 }
+/*
 void ApiServer::restSetSekcjeConf()
 {
     if(!testArgs()) return;
@@ -108,6 +115,30 @@ void ApiServer::restSetSekcjeConf()
     }else
     {
         returnError(__FUNCTION__);
+    }
+}*/
+void ApiServer::restSetSekcjaConf(uint8_t reqType)
+{
+    if(!testArgs()) return;
+    bool r;
+    switch(reqType)
+    {
+        case HTTP_POST:
+            r=config->sekcjeConf.addSekcjaAndSaveFile(server->arg(API_PARAM_NAME));
+            break;
+        case HTTP_PUT:
+            r=config->sekcjeConf.changeSekcjaFromJsonStringAndSaveFile(server->arg(API_PARAM_NAME));
+            break;
+        default:
+            r=false;
+            break;
+    }
+    if(r)
+    {
+        server->send(200, API_TYPE_JSON, config->sekcjeConf.getSekcjeJsonString());
+    }else
+    {
+         returnError(__FUNCTION__);
     }
 }
 void ApiServer::restSetSekcjeStan()
@@ -122,10 +153,29 @@ void ApiServer::restSetSekcjeStan()
         returnError(__FUNCTION__);
     }
 }
-void ApiServer::restSetProgram()
+void ApiServer::restGetSekcjeStan()
 {
     if(!testArgs()) return;
-    if(config->programConf.addProgramAndSaveFile(server->arg(API_PARAM_NAME)))
+    server->send(200, API_TYPE_JSON, config->sekcjeConf.getSekcjeStan());
+    
+}
+void ApiServer::restSetProgram(uint8_t reqType)
+{
+    if(!testArgs()) return;
+    bool r;
+    switch(reqType)
+    {
+        case HTTP_POST:
+            r=config->programConf.addProgramAndSaveFile(server->arg(API_PARAM_NAME));
+            break;
+        case HTTP_PUT:
+            r=config->programConf.changeProgramFromJsonStringAndSaveFile(server->arg(API_PARAM_NAME));
+            break;
+        default:
+            r=false;
+            break;
+    }
+    if(r)
     {
         server->send(200, API_TYPE_JSON, config->programConf.getProgramyJsonString(true));
     }else
@@ -135,10 +185,23 @@ void ApiServer::restSetProgram()
     }
 
 }
-void ApiServer::restSetSekwencja()
+void ApiServer::restSetSekwencja(uint8_t reqType)
 {
     if(!testArgs()) return;
-    if(config->programConf.addSekwencjaAndSaveFile(server->arg(API_PARAM_NAME)))
+    bool r;
+    switch(reqType)
+    {
+        case HTTP_POST:
+            r=config->programConf.addSekwencjaAndSaveFile(server->arg(API_PARAM_NAME));
+            break;
+        case HTTP_PUT:
+            r=config->programConf.changeSekwencjaFromJsonStringAndSaveFile(server->arg(API_PARAM_NAME));
+            break;
+        default:
+            r=false;
+            break;
+    }
+    if(r)
     {
         server->send(200, API_TYPE_JSON, config->programConf.getSekwencjeJsonString(true));
     }else
@@ -146,8 +209,8 @@ void ApiServer::restSetSekwencja()
         //server->send(500, "text/plain", "Error setProgram");
          returnError(__FUNCTION__);
     }
-
 }
+/*
 void ApiServer::restChangeProgram()
 {
     if(!testArgs()) return;
@@ -156,6 +219,20 @@ void ApiServer::restChangeProgram()
         server->send(200, API_TYPE_JSON, config->programConf.getProgramyJsonString(true));
     }else
     {
+        //server->send(500, "text/plain", "Error setProgram");
+         returnError(__FUNCTION__);
+    }
+
+}*/
+void ApiServer::restDelSekwencja()
+{
+    if(!testArgs()) return;
+    if(config->programConf.delSekwencjaFromJsonString(server->arg(API_PARAM_NAME)))
+    {
+        server->send(200, API_TYPE_JSON, config->programConf.getSekwencjeJsonString(true));
+    }else
+    {
+        Serial.println("blad");
         //server->send(500, "text/plain", "Error setProgram");
          returnError(__FUNCTION__);
     }
@@ -173,8 +250,58 @@ void ApiServer::restDelProgram()
         //server->send(500, "text/plain", "Error setProgram");
          returnError(__FUNCTION__);
     }
-
 }
+void ApiServer::restDelSekcja()
+{
+    if(!testArgs()) return;
+    if(config->sekcjeConf.delSekcjaFromJsonString(server->arg(API_PARAM_NAME)))
+    {
+        server->send(200, API_TYPE_JSON, config->sekcjeConf.getSekcjeJsonString());
+    }else
+    {
+        Serial.println("blad");
+        //server->send(500, "text/plain", "Error setProgram");
+         returnError(__FUNCTION__);
+    }
+}
+void ApiServer::restStartProgram()
+{
+    Serial.println(__PRETTY_FUNCTION__);
+    if(!testArgs()) return;
+    StaticJsonDocument<JSON_SIZE> doc;
+    DeserializationError error = deserializeJson(doc, server->arg(API_PARAM_NAME));
+    if (error)
+    {
+                     Serial.println( "JSON de-serialization failed: " + String(error.c_str()));
+                     server->send(400, "text/plain","JSON de-serialization failed: " + String(error.c_str()));
+                     return;
+    }else
+    {
+        uint8_t programId=doc["programId"] | ID_PROGRAMU_NIEZNANE;
+        if(manager->startProgram(programId))
+        {
+            server->send(200, API_TYPE_JSON, manager->getStatusJson());
+        }else
+        {
+            Serial.println("blad");
+            //server->send(500, "text/plain", "Error setProgram");
+            returnError(__FUNCTION__);
+        }
+    }
+};
+void ApiServer::restStopProgram()
+{
+    Serial.println(__PRETTY_FUNCTION__);
+    if(manager->stopProgram())
+    {
+        server->send(200, API_TYPE_JSON, manager->getStatusJson());
+    }else
+    {
+        Serial.println("blad");
+            //server->send(500, "text/plain", "Error setProgram");
+        returnError(__FUNCTION__);
+    }
+};
 void ApiServer::restServerRouting() 
 {
           //  server->on("/", HTTP_GET, []() {
@@ -182,25 +309,45 @@ void ApiServer::restServerRouting()
    //         });
         //    server->on("/", HTTP_GET,[this](){handleFileRead("/index.html");});
 
+
+            
+           /* server->on("/assets/config.json", HTTP_GET,[this](){
+                testArgs();//CORS headers
+                char c[50];
+                sprintf(c,"{\"ipUrl\":\"http://%d.%d.%d.%d\"}",WiFi.localIP()[0],WiFi.localIP()[1],WiFi.localIP()[2],WiFi.localIP()[3]);
+                Serial.println(c);
+                server->send(200, API_TYPE_JSON, c);
+            });*/
             /**** get *****/
-            server->on("/get", HTTP_GET,[this](){restGetConf(API_TYP_CONF);});
-            server->on("/get/system", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SYSTEM);});
-            server->on("/get/sekcje", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SEKCJE);});
-            server->on("/get/programy", HTTP_GET,[this](){restGetConf(API_TYP_CONF_PROGRAMY);});
-            server->on("/get/sekwencje", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SEKWENCJE);});
+            server->on("/api/get", HTTP_GET,[this](){restGetConf(API_TYP_CONF);});
+            server->on("/api/get/stan", HTTP_GET,[this](){restGetSekcjeStan();});
+            server->on("/api/get/system", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SYSTEM);});
+            server->on("/api/get/sekcje", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SEKCJE);});
+            server->on("/api/get/programy", HTTP_GET,[this](){restGetConf(API_TYP_CONF_PROGRAMY);});
+            server->on("/api/get/sekwencje", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SEKWENCJE);});
             
             /****** set ****/
-            server->on("/set/ntp", HTTP_POST,[this](){restSetNtpConf();});
-            server->on("/set/sekcje", HTTP_POST,[this](){restSetSekcjeConf();});
-            server->on("/set/stan", HTTP_POST,[this](){restSetSekcjeStan();});
-            server->on("/set/program", HTTP_POST,[this](){restSetProgram();});
-            server->on("/set/sekwencja", HTTP_POST,[this](){restSetSekwencja();});
+            server->on("/api/set/ntp", HTTP_POST,[this](){restSetNtpConf();});
+          //  server->on("/api/set/sekcje", HTTP_POST,[this](){restSetSekcjeConf();});
+            server->on("/api/set/sekcja", HTTP_POST,[this](){restSetSekcjaConf(HTTP_POST);});
+            server->on("/api/set/stan", HTTP_POST,[this](){restSetSekcjeStan();});
+            server->on("/api/set/program", HTTP_POST,[this](){restSetProgram(HTTP_POST);});
+            server->on("/api/set/sekwencja", HTTP_POST,[this](){restSetSekwencja(HTTP_POST);});
 
             /********* change *********/
-            server->on("/set/program", HTTP_PUT,[this](){restChangeProgram();});
+            server->on("/api/set/program", HTTP_PUT,[this](){restSetProgram(HTTP_PUT);});
+            server->on("/api/set/sekcja", HTTP_PUT,[this](){restSetSekcjaConf(HTTP_PUT);});
+            server->on("/api/set/sekwencja", HTTP_PUT,[this](){restSetSekwencja(HTTP_PUT);});
 
             /****** delete *****/
-            server->on("/del/program", HTTP_DELETE, [this](){restDelProgram();});
+            server->on("/api/del/program", HTTP_DELETE, [this](){restDelProgram();});
+            server->on("/api/del/sekwencja", HTTP_DELETE, [this](){restDelSekwencja();});
+            server->on("/api/del/sekcja", HTTP_DELETE, [this](){restDelSekcja();});
+
+            /*** inne ***/
+            server->on("/api/start/program", HTTP_POST,[this](){restStartProgram();});
+            server->on("/api/stop/program", HTTP_POST,[this](){restStopProgram();});
+
 
             server->on("/root", [this](){rootPage();});
             server->on(F("/api"), HTTP_GET, [this]{getApi();});
