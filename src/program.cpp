@@ -73,6 +73,57 @@ int Program::setProgramFromCSV(String str)
     }
     return id;
 };
+/* **********************************************************************
+************ parsuje stringa z konfiguracja sekcji na pola
+** wejście: jsonConfig
+** return: id sekcji odczytana z jsonConfig lub -1 jesli id nie podano
+************************************************************************** */
+int Program::setProgramFromJson(String jsonConfig)
+{
+    Serial.println(__PRETTY_FUNCTION__);
+    Serial.println(jsonConfig);
+    StaticJsonDocument<JSON_SIZE_PROGRAM> doc;
+    DeserializationError error = deserializeJson(doc, jsonConfig);
+    if (error)
+    {
+        Serial.println("JSON de-serialization failed: " + String(error.c_str()));
+        id = PROGRAM_ID_BRAK;
+        nazwa = "Program";
+        for(int i=0;i<7;i++) { dni[i]=false;}
+        aktywny=false;
+        liczbaGodzin=0;
+        lastProgramRun=0; 
+        return PROGRAM_ID_BLAD;
+    }
+    else
+    {
+        id = doc["programId"] | PROGRAM_ID_BRAK;
+        nazwa = doc["nazwa"] | String("Program");
+        String d=doc["dni"] | "0000000";
+        if(d.length()!=7)
+        {
+            Serial.println("Bledne dni programu");
+            return false;
+        }
+        for(int i=0;i<7;i++) { dni[i]=d.charAt(i)=='1'?true:false;  }
+
+        lastProgramRun=0; //data w sekundach od ostatnio uruchomionego programu
+        aktywny= doc["aktywny"] | false; //)==1 ? true : false ; // czy program jest aktywny
+        
+        liczbaGodzin=0;
+        if(doc.containsKey("godziny"))
+        {
+            JsonArray godzinyArr= doc["godziny"].as<JsonArray>();
+            liczbaGodzin=godzinyArr.size();
+            for(int i=0; i<liczbaGodzin; i++)
+            {
+              godzinyTab[i]=godzinyArr[i];
+            }   
+        }
+    }
+    return id;
+};
+/*
 bool Program::parseProgramFromJson(String json, uint8_t _id)
 {
      
@@ -89,15 +140,11 @@ bool Program::parseProgramFromJson(String json, uint8_t _id)
             id=_id;
         }
         else{
-            id=doc["id"] | _id;
+            id=doc["programId"] | _id;
         }
         
         nazwa=doc["nazwa"]| String("prog");
-       /* if(id==ID_PROGRAMU_NIEZNANE)
-        {
-            Serial.println("Bledne id programu");
-            return false;
-        }*/
+   
         String d=doc["dni"] | "0000000";
         if(d.length()!=7)
         {
@@ -107,7 +154,7 @@ bool Program::parseProgramFromJson(String json, uint8_t _id)
         for(int i=0;i<7;i++) { dni[i]=d.charAt(i)=='1'?true:false;  }
 
         lastProgramRun=0; //data w sekundach od ostatnio uruchomionego programu
-        aktywny= (doc["aktywny"] | 0 )==1 ? true : false ; // czy program jest aktywny
+        aktywny= doc["aktywny"] | false; //)==1 ? true : false ; // czy program jest aktywny
         
         liczbaGodzin=0;
         if(doc.containsKey("godziny"))
@@ -124,45 +171,16 @@ bool Program::parseProgramFromJson(String json, uint8_t _id)
             }
            
         }
-
-       /*
-
-        if(doc.containsKey("sekwencje"))
-        {
-            JsonArray sekwencjeArr= doc["sekwencje"].as<JsonArray>();
-            for (JsonObject repo : sekwencjeArr)
-            {
-                uint8_t sekcjaId=repo["sekcjaId"] | 254;
-                bool akcja=(repo["akcja"] | 0)==1?true:false;
-                unsigned long czasTrwaniaAkcji=doc["czasTrwaniaAkcji"] | 0;
-                unsigned long startAkcji = doc["startAkcji"] | 0;
-                
-            
-                Sekwencja *s=new Sekwencja();
-                s->setSekwencja(sekcjaId,akcja,startAkcji,czasTrwaniaAkcji);
-                sekwencjeTab[liczbaSekwencji]=s;
-                liczbaSekwencji++;
-            }
-        }
-      */
     }
     return true;
-}/*
-void Program::clearSekwencjeList()
-{
-    Serial.printf("Program::clearSekwencjeList, elementow: %d", liczbaSekwencji);
-    for(int i=0;i<liczbaSekwencji;i++)
-    {
-        delete sekwencjeTab[i];
-    }
-    Serial.printf(" koniec, elementow: %d\n",liczbaSekwencji);
 }*/
+
 String Program::getProgramJsonString(bool dodajLastRun)
 {
 
-    String ret=String("{\"id\":")+String(id)+String(",\"nazwa\":\"")+String(nazwa)+String("\",\"dni\":[\"");
+    String ret=String("{\"programId\":")+String(id)+String(",\"nazwa\":\"")+String(nazwa)+String("\",\"dni\":\"");
     for(int i=0;i<7;i++) { ret+= dni[i] ? "1" : "0"; }
-    ret+=String("\"],\"aktywny\":")+ String(aktywny ? "1" : "0");
+    ret+=String("\",\"aktywny\":")+ String(aktywny ? "1" : "0");
     ret+=String(",\"godziny\":[");
     for(int i=0;i<liczbaGodzin;i++) { ret+= String(godzinyTab[i]);
         if(i<liczbaGodzin-1) ret+=String(",");

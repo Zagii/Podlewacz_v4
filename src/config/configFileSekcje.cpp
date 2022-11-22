@@ -230,7 +230,7 @@ String ConfigFileSekcje::getSekcjeStan()
 {
     String ret="";
     StaticJsonDocument<JSON_SIZE_SEKCJE> doc;
-    JsonArray stany = doc.createNestedArray("stany");
+    JsonArray stany = doc.to<JsonArray>();//doc.createNestedArray("stany");
     for(int i=0;i<liczbaSekcji;i++)
     {
         //JsonObject s = stany.createNestedObject();
@@ -299,14 +299,16 @@ int ConfigFileSekcje::saveSekcjeToFile()
             while(file.available())
             {
                 str=file.readStringUntil('\n');//.readString();
+                str.trim();
                 if(i>= liczbaSekcji)
                 {
                     wykryteZmiany=true;
                     break;
                 }
+               // str=str+'\0';
                 str2=sekcje[i]->getSekcjaJsonString();
-                Serial.print(F("str  "));Serial.println(str);
-                Serial.print(F("str2 "));Serial.println(str2);
+                Serial.print(F("str  ."));Serial.print(str);Serial.println(F("."));
+                Serial.print(F("str2 ."));Serial.print(str2);Serial.println(F("."));
                 if(!str.equals(str2))
                 {
                     Serial.print(F("-- Wykryte zmiany w id: "));Serial.println(i);
@@ -315,7 +317,7 @@ int ConfigFileSekcje::saveSekcjeToFile()
                 }
                 i++;
             }
-            if(i==0)// pusty plik
+            if(i==0||i<liczbaSekcji)// pusty plik
             {
                 wykryteZmiany=true;
             }
@@ -351,7 +353,7 @@ int ConfigFileSekcje::saveSekcjeToFile()
     return r;
 };
 
-bool ConfigFileSekcje::addSekcja(String json)
+bool ConfigFileSekcje::addChangeSekcja(String json)
 {
        Serial.println(__PRETTY_FUNCTION__);
             if(liczbaSekcji>= MAX_LICZBA_SEKCJI) 
@@ -361,26 +363,41 @@ bool ConfigFileSekcje::addSekcja(String json)
             }
             Sekcja* sek=new Sekcja();
             int r=sek->setSekcjaFromJson(json);
+            Serial.printf("r: %d",r);
             Serial.println(sek->getSekcjaJsonString());
-            if(r!=SEKCJA_ID_BLAD && r!= SEKCJA_ID_BRAK)
-            {   
-                sek->id=getFirstEmptySekcjaId();
-                sekcje[liczbaSekcji]=sek;
-                Serial.println(F("Sekcje dodano"));
-                liczbaSekcji++;
-                  
-            }else
+            switch(r)
             {
-                Serial.println(F("Bledny json sekcja"));
-                delete sek;
-                return false;
-            }         
+                case SEKCJA_ID_BLAD:
+                        Serial.println(F("Sekcja id: blad\n"));
+                        delete sek;
+                        return false; 
+                break;
+                case SEKCJA_ID_BRAK:
+                    sek->id=getFirstEmptySekcjaId();
+                    sekcje[liczbaSekcji]=sek;
+                    Serial.println(F("Sekcje dodano"));
+                    liczbaSekcji++;
+                    break;
+                default:
+                    Serial.println(F("Modyfikacja sekcji"));
+                    uint8_t x=getSekcjaById(sek->id);
+                    if(x<0)
+                    {
+                        Serial.printf("Sekcja id: %d, nie istnieje\n",x);
+                        delete sek;
+                        return false;        
+                    }
+                    sekcje[x]->copySekcja(sek);
+                    delete sek;
+                break;
+
+            }
             return true;
 };   
-bool ConfigFileSekcje::addSekcjaAndSaveFile(String json)
+bool ConfigFileSekcje::addChangeSekcjaAndSaveFile(String json)
 {
     Serial.println(__PRETTY_FUNCTION__);
-    if(addSekcja(json))
+    if(addChangeSekcja(json))
     {
         return saveSekcjeToFile()==0? true:false;
         
@@ -391,7 +408,18 @@ bool ConfigFileSekcje::addSekcjaAndSaveFile(String json)
 };      
 String ConfigFileSekcje::getSekcjeJsonString()
 {
-    return "";
+     Serial.print(__PRETTY_FUNCTION__);
+  //  String ret="{\"tag\":\""+String(TAG_CONFIG_FILE_PROGRAMY)+"\",\"Programy\":[";
+     String ret="[";
+    
+    for(int i=0;i<liczbaSekcji;i++)
+    { 
+        ret+= String(sekcje[i]->getSekcjaJsonString());
+        if(i<liczbaSekcji-1)ret+=",";
+    }
+    ret+="]"; 
+    Serial.print(": ");Serial.println(ret);
+    return ret;
 };
 bool ConfigFileSekcje::setSekcjaStan(String json)
 {
@@ -441,6 +469,7 @@ void ConfigFileSekcje::setOffSekcjeAll()
                 sekcje[i]->setOff();
             }
         };
+        /*
 bool ConfigFileSekcje::changeSekcjaFromJsonStringAndSaveFile(String json)
 {
     Serial.println(__PRETTY_FUNCTION__);
@@ -458,7 +487,7 @@ bool ConfigFileSekcje::changeSekcjaFromJsonStringAndSaveFile(String json)
     }
     delete tmp;
     return saveSekcjeToFile()==0;
-};
+};*/
 bool ConfigFileSekcje::delSekcjaFromJsonString(String json)
 {
     Serial.println(__PRETTY_FUNCTION__);

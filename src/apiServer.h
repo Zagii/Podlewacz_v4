@@ -32,6 +32,7 @@ class ApiServer
         void restSetProgram(uint8_t reqType); // set/change
         void restSetSekwencja(uint8_t reqType); //set/change
 
+        void addCORS();
         //void restChangeProgram();
 
         void restDelProgram();

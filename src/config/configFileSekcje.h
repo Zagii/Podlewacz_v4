@@ -70,10 +70,10 @@ class ConfigFileSekcje
         int loadSekcjeFromFile(); 
         int saveSekcjeToFile(); 
 
-        bool addSekcja(String json);   
-        bool addSekcjaAndSaveFile(String json);      
+        bool addChangeSekcja(String json);   
+        bool addChangeSekcjaAndSaveFile(String json);      
         String getSekcjeJsonString();   
-        bool changeSekcjaFromJsonStringAndSaveFile(String json);   
+       // bool changeSekcjaFromJsonStringAndSaveFile(String json);   
         bool delSekcjaFromJsonString(String json);
         bool delSekcja(uint8_t id);     
 };

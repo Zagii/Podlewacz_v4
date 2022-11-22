@@ -13,7 +13,8 @@ void Sekcja::init()
 void Sekcja::begin(HardwareOutput *h, uint8_t _id, String jsonConfig)
 {
     hw = h;
-    parseConfig(_id, jsonConfig);
+    //parseConfig(_id, jsonConfig);
+    setSekcjaFromJson(jsonConfig);
     init();
 };
 void Sekcja::begin(HardwareOutput *h, uint8_t _id, String _nazwa, int _typ, int _pin, bool _inverted,
@@ -110,7 +111,7 @@ int Sekcja::sendPostRequest(String url, String requestData)
         return -1;
     }
     return -1;
-};
+};/*
 void Sekcja::parseConfig(uint8_t _id, String jsonConfig)
 {
     bool czyEdycja = false;
@@ -160,7 +161,7 @@ void Sekcja::parseConfig(uint8_t _id, String jsonConfig)
         apiOffJson = doc["apiOffJson"] | String("");
     }
     return; // czyEdycja;
-};
+};*/
 
 /* **********************************************************************
 ************ parsuje stringa z konfiguracja sekcji na pola
@@ -169,14 +170,14 @@ void Sekcja::parseConfig(uint8_t _id, String jsonConfig)
 ************************************************************************** */
 int Sekcja::setSekcjaFromJson(String jsonConfig)
 {
-    Serial.println("Parsowanie konfiguracji sekcji ");
+    Serial.println(__PRETTY_FUNCTION__);
     Serial.println(jsonConfig);
     StaticJsonDocument<JSON_SIZE> doc;
     DeserializationError error = deserializeJson(doc, jsonConfig);
     if (error)
     {
         Serial.println("JSON de-serialization failed: " + String(error.c_str()));
-        id = -1;
+        id = SEKCJA_ID_BRAK;
         nazwa = "Sekcja";
         typ = SEKCJA_TYP_FIZYCZNA;
         pin = 0;
@@ -189,7 +190,7 @@ int Sekcja::setSekcjaFromJson(String jsonConfig)
     }
     else
     {
-        id = doc["id"] | SEKCJA_ID_BRAK;
+        id = doc["sekcjaId"] | SEKCJA_ID_BRAK;
         nazwa = doc["nazwa"] | String("Sekcja");
         typ = doc["typ"] | SEKCJA_TYP_FIZYCZNA; // fizyczna, wirtualnaREST, wirtualnaMQTT
         pin = doc["pin"] | 0;                   // pin ktorym steruje
@@ -232,7 +233,7 @@ String Sekcja::getSekcjaJsonString()
         ret += String(",\"pin\":") + String(pin);
     }
 
-    ret += String(",\"inverted\":") + String(inverted);
+    ret += String(",\"inverted\":") + String(inverted?1:0);
     if (typ == SEKCJA_TYP_REST)
     {
         ret += String(",\"apiOnUrl\":\"") + String(apiOnUrl) + String("\"");

@@ -40,7 +40,9 @@ void ApiServer::restGetConf(uint8_t typConf)
             resp=config->programConf.getSekwencjeJsonString(true);
         break;
     };
-            server->send(retCode, contentType, resp);   
+    addCORS();
+    Serial.println(resp);
+    server->send(retCode, contentType, resp);   
 }
 bool ApiServer::testArgs()
 {
@@ -58,15 +60,20 @@ bool ApiServer::testArgs()
  
      
     Serial.println(message);
-        server->sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+     return true;
+}
+void ApiServer::addCORS()
+{
+ //   server->sendHeader(F("Access-Control-Allow-Origin"), F("*"));
         server->sendHeader(F("Access-Control-Max-Age"), F("10000"));
-        server->sendHeader(F("Access-Control-Allow-Methods"), F("PUT,POST,GET,OPTIONS"));
+        server->sendHeader(F("Access-Control-Allow-Methods"), F("PUT,POST,GET,DELETE,OPTIONS"));
         server->sendHeader(F("Access-Control-Allow-Headers"), F("*"));
-    return true;
 }
 void ApiServer::restSetNtpConf()
 {
-      if(!testArgs()) return;
+    addCORS();
+    if(!testArgs()) return;
+      
       StaticJsonDocument<JSON_SIZE> doc;
       DeserializationError error = deserializeJson(doc, server->arg(API_PARAM_NAME));
       if (error)
@@ -119,9 +126,12 @@ void ApiServer::restSetSekcjeConf()
 }*/
 void ApiServer::restSetSekcjaConf(uint8_t reqType)
 {
+    Serial.println(__FUNCTION__);
+        
+    addCORS();
     if(!testArgs()) return;
     bool r;
-    switch(reqType)
+/*    switch(reqType)
     {
         case HTTP_POST:
             r=config->sekcjeConf.addSekcjaAndSaveFile(server->arg(API_PARAM_NAME));
@@ -132,7 +142,8 @@ void ApiServer::restSetSekcjaConf(uint8_t reqType)
         default:
             r=false;
             break;
-    }
+    }*/
+    r=config->sekcjeConf.addChangeSekcjaAndSaveFile(server->arg(API_PARAM_NAME));
     if(r)
     {
         server->send(200, API_TYPE_JSON, config->sekcjeConf.getSekcjeJsonString());
@@ -143,6 +154,7 @@ void ApiServer::restSetSekcjaConf(uint8_t reqType)
 }
 void ApiServer::restSetSekcjeStan()
 {
+    addCORS();
     if(!testArgs()) return;
     if(config->sekcjeConf.setSekcjeStan(server->arg(API_PARAM_NAME)))
     {
@@ -155,15 +167,17 @@ void ApiServer::restSetSekcjeStan()
 }
 void ApiServer::restGetSekcjeStan()
 {
+    addCORS();
     if(!testArgs()) return;
     server->send(200, API_TYPE_JSON, config->sekcjeConf.getSekcjeStan());
     
 }
 void ApiServer::restSetProgram(uint8_t reqType)
 {
+    addCORS();
     if(!testArgs()) return;
     bool r;
-    switch(reqType)
+  /*  switch(reqType)
     {
         case HTTP_POST:
             r=config->programConf.addProgramAndSaveFile(server->arg(API_PARAM_NAME));
@@ -174,7 +188,8 @@ void ApiServer::restSetProgram(uint8_t reqType)
         default:
             r=false;
             break;
-    }
+    }*/
+    r=config->programConf.addChangeProgramAndSaveFile(server->arg(API_PARAM_NAME));
     if(r)
     {
         server->send(200, API_TYPE_JSON, config->programConf.getProgramyJsonString(true));
@@ -187,6 +202,7 @@ void ApiServer::restSetProgram(uint8_t reqType)
 }
 void ApiServer::restSetSekwencja(uint8_t reqType)
 {
+    addCORS();
     if(!testArgs()) return;
     bool r;
     switch(reqType)
@@ -226,6 +242,7 @@ void ApiServer::restChangeProgram()
 }*/
 void ApiServer::restDelSekwencja()
 {
+    addCORS();
     if(!testArgs()) return;
     if(config->programConf.delSekwencjaFromJsonString(server->arg(API_PARAM_NAME)))
     {
@@ -240,6 +257,7 @@ void ApiServer::restDelSekwencja()
 }
 void ApiServer::restDelProgram()
 {
+    addCORS();
     if(!testArgs()) return;
     if(config->programConf.delProgramFromJsonString(server->arg(API_PARAM_NAME)))
     {
@@ -253,6 +271,7 @@ void ApiServer::restDelProgram()
 }
 void ApiServer::restDelSekcja()
 {
+    addCORS();
     if(!testArgs()) return;
     if(config->sekcjeConf.delSekcjaFromJsonString(server->arg(API_PARAM_NAME)))
     {
@@ -266,6 +285,7 @@ void ApiServer::restDelSekcja()
 }
 void ApiServer::restStartProgram()
 {
+    addCORS();
     Serial.println(__PRETTY_FUNCTION__);
     if(!testArgs()) return;
     StaticJsonDocument<JSON_SIZE> doc;
@@ -291,6 +311,7 @@ void ApiServer::restStartProgram()
 };
 void ApiServer::restStopProgram()
 {
+    addCORS();
     Serial.println(__PRETTY_FUNCTION__);
     if(manager->stopProgram())
     {
@@ -400,6 +421,12 @@ void ApiServer::getApi()
 void ApiServer::notFoundPage()
 {
             Serial.println("notFoundPage");
+            if(server->method()==HTTP_OPTIONS)
+            {
+                addCORS();
+                server->send(200);
+                return;
+            }
         //             char content[] = "not found";
         //          server->send(404, "text/plain", content);
             if (!handleFileRead(server->uri()))                  // send it if it exists
@@ -411,6 +438,7 @@ void ApiServer::notFoundPage()
 bool ApiServer::handleFileRead(String path)
 {  // send the right file to the client (if it exists)
             Serial.println("handleFileRead: " + path);
+            Serial.print(F("methoda: "));Serial.println(server->method());
             if(path.endsWith("/")) path += "index.html";           // If a folder is requested, send the index file
             String jsString="";
             if(path.endsWith("ws.js"))

@@ -57,11 +57,16 @@ class ConfigFileProgram //: public ConfigFS
         };   
         void loop(){};
         
-        bool addProgram(String json);   
-        bool addProgramAndSaveFile(String json);   
+      //  bool addProgram(String json);   
+       // bool addProgramAndSaveFile(String json);   
+
+        bool addChangeProgram(String json);  
 
         String getProgramyJsonString(bool dodajLastRunProgramu=false);   
-        bool changeProgramFromJsonStringAndSaveFile(String json);   
+
+        bool addChangeProgramAndSaveFile(String json);
+
+     //   bool changeProgramFromJsonStringAndSaveFile(String json);   
         bool delProgramFromJsonString(String json);
         bool delProgram(uint8_t id);   
         

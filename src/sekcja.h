@@ -62,7 +62,7 @@ class Sekcja
    
    /* wysylka rozkazu post do zmiany stanu sekcji restowej */
     int sendPostRequest(String url, String requestData);
-    void parseConfig(uint8_t _id, String jsonConfig);
+  //  void parseConfig(uint8_t _id, String jsonConfig);
 
     /* odpowiednik z boolean robi wiecej to tylko nakladka */
     void setState(uint8_t state);

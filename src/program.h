@@ -16,6 +16,9 @@
 #define MAX_ILOSC_SEKWENCJI_W_PROGRAMIE 50
 
 #define ID_PROGRAMU_NIEZNANE 254
+
+#define PROGRAM_ID_BRAK -1
+#define PROGRAM_ID_BLAD -2
 /* 
     program uruchamiany jest w konkretne dni o konkretnych godzinach
     program zawiera sekwencje czyli czasy uruchomienia wybranych sekcji
@@ -41,7 +44,8 @@ class Program
         ~Program(){   };
         int dodajGodzine(int g);
         String getProgramCSVString();
-        bool parseProgramFromJson(String json,uint8_t _id=ID_PROGRAMU_NIEZNANE);
+         int setProgramFromJson(String jsonConfig);
+       // bool parseProgramFromJson(String json,uint8_t _id=ID_PROGRAMU_NIEZNANE);
         int setProgramFromCSV(String csv);
         String getProgramJsonString(bool dodajLastRun=false);
         bool copyProgram(Program * source);

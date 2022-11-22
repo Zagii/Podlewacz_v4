@@ -377,7 +377,59 @@ int ConfigFileProgram::saveProgramsToFile()
         }
     return r;
 };
+bool ConfigFileProgram::addChangeProgram(String json)
+{
+       Serial.println(__PRETTY_FUNCTION__);
+            if(liczbaProgramow>= MAX_PROGRAM_SZT) 
+            {
+                Serial.println(F("Brak miejsca na nowy program"));
+                return false;
+            }
+            Program* prog=new Program();
+            int r=prog->setProgramFromJson(json);
+            Serial.printf("r: %d",r);
+            Serial.println(prog->getProgramJsonString());
+            switch(r)
+            {
+                case PROGRAM_ID_BLAD:
+                        Serial.println(F("Program id: blad\n"));
+                        delete prog;
+                        return false; 
+                break;
+                case PROGRAM_ID_BRAK:
+                    prog->id=getFirstEmptyProgramId();
+                    programyTab[liczbaProgramow]=prog;
+                    Serial.println(F("Program dodano"));
+                    liczbaProgramow++;
+                    break;
+                default:
+                    Serial.println(F("Modyfikacja programu"));
+                    uint8_t x=getProgramById(prog->id);
+                    if(x<0)
+                    {
+                        Serial.printf("Program id: %d, nie istnieje\n",x);
+                        delete prog;
+                        return false;        
+                    }
+                    programyTab[x]->copyProgram(prog);
+                    delete prog;
+                break;
 
+            }
+            return true;
+};   
+bool ConfigFileProgram::addChangeProgramAndSaveFile(String json)
+{
+     Serial.println(__PRETTY_FUNCTION__);
+    if(addChangeProgram(json))
+    {
+        return saveProgramsToFile()==0? true:false;
+        
+    }else 
+    {
+        return false;
+    }
+}
 
 String ConfigFileProgram::getProgramyJsonString(bool dodajLastRunProgramu)
 {
@@ -395,7 +447,7 @@ String ConfigFileProgram::getProgramyJsonString(bool dodajLastRunProgramu)
     return ret;
 }
 
-
+/*
 bool ConfigFileProgram::addProgramAndSaveFile(String json)
 {
     Serial.println(__PRETTY_FUNCTION__);
@@ -407,7 +459,7 @@ bool ConfigFileProgram::addProgramAndSaveFile(String json)
     {
         return false;
     }
-}
+}*/
 int ConfigFileProgram::getFirstEmptyProgramId()
 {
     Serial.print(__PRETTY_FUNCTION__);
@@ -442,6 +494,7 @@ uint8_t ConfigFileProgram::getProgramById(uint8_t id)
     Serial.print(F(", index: "));Serial.println(r);
     return r;
 }
+/*
 bool ConfigFileProgram::changeProgramFromJsonStringAndSaveFile(String json)
 {
     Serial.println(__PRETTY_FUNCTION__);
@@ -464,7 +517,8 @@ bool ConfigFileProgram::changeProgramFromJsonStringAndSaveFile(String json)
     }
     delete tmp;
     return saveProgramsToFile()==0;
-}
+}*/
+/*
 bool ConfigFileProgram::addProgram(String json)
 {
             Serial.println(__PRETTY_FUNCTION__);
@@ -490,7 +544,7 @@ bool ConfigFileProgram::addProgram(String json)
                 return false;
             }         
             return true;
-};
+};*/
 bool ConfigFileProgram::delProgramFromJsonString(String json)
 {
     Serial.println(__PRETTY_FUNCTION__);
@@ -501,7 +555,7 @@ bool ConfigFileProgram::delProgramFromJsonString(String json)
          return false;
     }else
     { 
-       int  idProg=doc["id"] | MAX_PROGRAM_SZT;
+       int  idProg=doc["programId"] | MAX_PROGRAM_SZT;
        return delProgram(idProg);
     }
 }
