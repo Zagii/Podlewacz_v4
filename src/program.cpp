@@ -82,12 +82,14 @@ int Program::setProgramFromJson(String jsonConfig)
 {
     Serial.println(__PRETTY_FUNCTION__);
     Serial.println(jsonConfig);
+    int tmpId=PROGRAM_ID_BLAD;
     StaticJsonDocument<JSON_SIZE_PROGRAM> doc;
     DeserializationError error = deserializeJson(doc, jsonConfig);
     if (error)
     {
         Serial.println("JSON de-serialization failed: " + String(error.c_str()));
         id = PROGRAM_ID_BRAK;
+        tmpId=PROGRAM_ID_BRAK;
         nazwa = "Program";
         for(int i=0;i<7;i++) { dni[i]=false;}
         aktywny=false;
@@ -97,7 +99,11 @@ int Program::setProgramFromJson(String jsonConfig)
     }
     else
     {
-        id = doc["programId"] | PROGRAM_ID_BRAK;
+        tmpId=doc["programId"] | PROGRAM_ID_BRAK;
+        if(tmpId<0)
+            id=ID_PROGRAMU_NIEZNANE; // mapowanie na uint8_t jesli przyjdzie -1 z zewnatrz
+        else
+            id = tmpId;
         nazwa = doc["nazwa"] | String("Program");
         String d=doc["dni"] | "0000000";
         if(d.length()!=7)
@@ -121,7 +127,7 @@ int Program::setProgramFromJson(String jsonConfig)
             }   
         }
     }
-    return id;
+    return tmpId;
 };
 /*
 bool Program::parseProgramFromJson(String json, uint8_t _id)

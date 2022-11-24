@@ -158,7 +158,9 @@ void ApiServer::restSetSekcjeStan()
     if(!testArgs()) return;
     if(config->sekcjeConf.setSekcjeStan(server->arg(API_PARAM_NAME)))
     {
-        server->send(200, API_TYPE_JSON, config->sekcjeConf.getSekcjeStan());
+         String s="{\"rtc\":"+String(config->czas->getTimeInSecondsRTC())+",\"ntp\":"+String(config->czas->getTimeInSecondsNTP())+",\"sekcje\":"+
+        config->sekcjeConf.getSekcjeStan()+",\"upT\":"+String(millis())+"}";
+        server->send(200, API_TYPE_JSON,s);
     }else
     {
        // server->send(500, "text/plain", "Error setSekcjeStan");
@@ -168,8 +170,10 @@ void ApiServer::restSetSekcjeStan()
 void ApiServer::restGetSekcjeStan()
 {
     addCORS();
-    if(!testArgs()) return;
-    server->send(200, API_TYPE_JSON, config->sekcjeConf.getSekcjeStan());
+  //  if(!testArgs()) return;
+  String s="{\"rtc\":"+String(config->czas->getTimeInSecondsRTC())+",\"ntp\":"+String(config->czas->getTimeInSecondsNTP())+",\"sekcje\":"+
+        config->sekcjeConf.getSekcjeStan()+",\"upT\":"+String(millis())+"}";
+    server->send(200, API_TYPE_JSON,s);
     
 }
 void ApiServer::restSetProgram(uint8_t reqType)
@@ -341,7 +345,7 @@ void ApiServer::restServerRouting()
             });*/
             /**** get *****/
             server->on("/api/get", HTTP_GET,[this](){restGetConf(API_TYP_CONF);});
-            server->on("/api/get/stan", HTTP_GET,[this](){restGetSekcjeStan();});
+            server->on("/api/get/stany", HTTP_GET,[this](){restGetSekcjeStan();});
             server->on("/api/get/system", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SYSTEM);});
             server->on("/api/get/sekcje", HTTP_GET,[this](){restGetConf(API_TYP_CONF_SEKCJE);});
             server->on("/api/get/programy", HTTP_GET,[this](){restGetConf(API_TYP_CONF_PROGRAMY);});

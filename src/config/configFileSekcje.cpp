@@ -19,7 +19,8 @@ int ConfigFileSekcje::loadSekcjeFromFile()
             str=file.readStringUntil('\n');//.readString();
             Serial.println(str);
             Sekcja *sek=new Sekcja();
-            r=sek->setSekcjaFromJson(str);
+            r= sek->begin(hardwareOutput,str);
+            //r=sek->setSekcjaFromJson(str);
            
             if(liczbaSekcji<MAX_LICZBA_SEKCJI && r>=0)
             {
@@ -196,32 +197,34 @@ bool ConfigFileSekcje::setSekcjeStan(String json)
                      return false;
     }else
     {
-        if(doc.containsKey("Stany"))
-        {
-            JsonArray stanyTab= doc["Stany"].as<JsonArray>();
+      //  if(doc.containsKey("Stany"))
+       // {
+         //   JsonArray stanyTab= doc["Stany"].as<JsonArray>();
               
-            uint8_t n =stanyTab.size();
-            Serial.print("  Liczba polecen: "); Serial.print(n); Serial.println(" szt.");
-            for (JsonObject repo : stanyTab)
-            {
-                uint8_t sekcjaId=repo["id"];
-                if(sekcjaId>=liczbaSekcji || sekcjaId<0)
+          //  uint8_t n =stanyTab.size();
+          //  Serial.print("  Liczba polecen: "); Serial.print(n); Serial.println(" szt.");
+          //  for (JsonObject repo : stanyTab)
+           // {
+                uint8_t sekcjaId=doc["sekcjaId"] | -1;
+                uint8_t index = this->getSekcjaById(sekcjaId);
+                if(sekcjaId>=liczbaSekcji || sekcjaId<0 || index<0)
                 {
                     Serial.println("Blad danych. Sekcja poza zakresem. Ignoruje");
-                    continue;
+                   // continue;
+                   return false;
                 }
-                uint8_t nowyStan=repo["stan"];
-                long cz=repo["czas"] | 0;
+                uint8_t nowyStan=doc["stan"] | 0;
+                long cz=doc["czas"] | 0;
                 Serial.printf("-- zmiana sekcji: %d, na %d, czas: %ld\n",sekcjaId,nowyStan,cz);
                 if(cz>0)
                 {
-                    sekcje[sekcjaId]->setStateForTime(nowyStan,cz);
+                    sekcje[index]->setStateForTime(nowyStan,cz);
                 }else
                 {
-                    sekcje[sekcjaId]->setState(nowyStan);
+                    sekcje[index]->setState(nowyStan);
                 }
-            }
-        }
+           // }
+        //}
     }
     return true;
 };
@@ -362,7 +365,8 @@ bool ConfigFileSekcje::addChangeSekcja(String json)
                 return false;
             }
             Sekcja* sek=new Sekcja();
-            int r=sek->setSekcjaFromJson(json);
+            int r= sek->begin(hardwareOutput,json);
+            //int r=sek->setSekcjaFromJson(json);
             Serial.printf("r: %d",r);
             Serial.println(sek->getSekcjaJsonString());
             switch(r)

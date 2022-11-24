@@ -113,13 +113,13 @@ class Czas
         String ret=timeClient.getFormattedTime();
         return ret;
      };
-     unsigned long getTimeInSecondsNTP()
+     public: unsigned long getTimeInSecondsNTP()
      {
          if(!useNTP) return 0;
         //zmienic na czas z zegarkow
         return timeClient.getEpochTime();
      };
-     unsigned long getTimeInSecondsRTC()
+     public: unsigned long getTimeInSecondsRTC()
      {
         //zmienic na czas z zegarkow
         return now.unixtime()+ ((millis() - rtcLastUpdate) / 1000);

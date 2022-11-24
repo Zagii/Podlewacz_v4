@@ -11,9 +11,10 @@
 
 class Config
 {
-    Czas* czas;
+    
     HardwareOutput *hw;
     public:
+    Czas* czas;
       ConfigFileSystem sysConf{"/sys.json"};
       ConfigFileSekcje sekcjeConf{"/sekcje.json"};
       ConfigFileProgram programConf{"/programy.csv","/sekwencje.csv"};

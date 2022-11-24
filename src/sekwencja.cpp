@@ -78,6 +78,7 @@ bool Sekwencja::parseSekwencjaFromJson(String json,uint8_t _id)
         else{
             sekwencjaId = doc["sekwencjaId"] | _id;
         }
+     //   if(sekwencjaId)
         programId=doc["programId"] | 254;
         sekcjaId=doc["sekcjaId"] | 254;
         akcja=(doc["akcja"] | 0)==1?true:false;
@@ -91,7 +92,7 @@ String Sekwencja::getSekwencjaJsonString(bool dodajLastRun)
 {
     Serial.println(__PRETTY_FUNCTION__);
     String ret=String("{\"programId\":")+String(programId)+String(",\"sekwencjaId\":")+String(sekwencjaId)+
-            String(",\"sekcjaId\":\"")+String(sekcjaId)+String("\",\"akcja\":");
+            String(",\"sekcjaId\":")+String(sekcjaId)+String(",\"akcja\":");
     ret+=String(akcja ? "1" : "0");
     ret+=String(",\"czasTrwaniaAkcji\":")+String(czasTrwaniaAkcji)+String(",\"startAkcji\":")+String(startAkcji);
     if(dodajLastRun)

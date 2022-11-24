@@ -10,13 +10,14 @@ void Sekcja::init()
     autoSwitchActive = false;
     setOff();
 };
-void Sekcja::begin(HardwareOutput *h, uint8_t _id, String jsonConfig)
+int Sekcja::begin(HardwareOutput *h,  String jsonConfig)
 {
     hw = h;
     //parseConfig(_id, jsonConfig);
-    setSekcjaFromJson(jsonConfig);
+    int r=setSekcjaFromJson(jsonConfig);
     init();
-};
+    return r;
+};/*
 void Sekcja::begin(HardwareOutput *h, uint8_t _id, String _nazwa, int _typ, int _pin, bool _inverted,
                    String _apiOnUrl, String _apiOnJson, String _apiOffUrl, String _apiOffJson)
 {
@@ -31,7 +32,7 @@ void Sekcja::begin(HardwareOutput *h, uint8_t _id, String _nazwa, int _typ, int 
     apiOffJson = _apiOffJson;
     apiOffUrl = _apiOffUrl;
     init();
-};
+};*/
 void Sekcja::setState(bool state)
 {
     if (state == stan)

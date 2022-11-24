@@ -50,9 +50,9 @@ class Sekcja
     unsigned long getLastStateChange() {return lastStateChanged;};
     bool getStan(){return stan;};
     
-    void begin(HardwareOutput *h, uint8_t _id, String jsonConfig);
-    void begin(HardwareOutput *h, uint8_t _id, String _nazwa,int _typ, int _pin,bool _inverted,
-        String _apiOnUrl, String _apiOnJson, String _apiOffUrl, String _apiOffJson);
+    int begin(HardwareOutput *h, String jsonConfig);
+  //  void begin(HardwareOutput *h, uint8_t _id, String _nazwa,int _typ, int _pin,bool _inverted,
+     //   String _apiOnUrl, String _apiOnJson, String _apiOffUrl, String _apiOffJson);
     
     bool copySekcja(Sekcja * source);
     /* ustawia konfiguracje sekcji*/
