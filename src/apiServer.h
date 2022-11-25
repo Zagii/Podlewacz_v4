@@ -47,6 +47,7 @@ class ApiServer
         bool testArgs();
 
         void returnError(String funkcja);
+        String makeStanJson();
     public:
         ApiServer(){ };
         void begin(ESP8266WebServer *_server,Config* _conf, Manager* _manager);
@@ -58,6 +59,7 @@ class ApiServer
         bool handleFileRead(String path);
         String getContentType(String filename);
         int sendPostRequest(String url, String requestData);
+        
 };
 
 #endif

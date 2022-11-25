@@ -32,8 +32,12 @@ void Manager::sprawdzSekwencje(unsigned long obecnaSekundaDzialaniaProgramu)
             {
                     if( config->programConf.sekwencjeTab[i]->getStartAkcji() == obecnaSekundaDzialaniaProgramu)
                     {
-                        Serial.printf(" sekwencja %d start, sekcjaId: %d, czas: %lu\n", config->programConf.sekwencjeTab[i]->getSekwencjaId(),
-                        config->programConf.sekwencjeTab[i]->getSekcjaId(),config->programConf.sekwencjeTab[i]->getCzasTrwaniaAkcji());
+                        Serial.printf("%lu) sekwencja %d start, sekcjaId: %d, akcja: %d, czas: %lu\n", 
+                        obecnaSekundaDzialaniaProgramu,
+                        config->programConf.sekwencjeTab[i]->getSekwencjaId(),
+                        config->programConf.sekwencjeTab[i]->getSekcjaId(),
+                        config->programConf.sekwencjeTab[i]->getAkcja(),
+                        config->programConf.sekwencjeTab[i]->getCzasTrwaniaAkcji());
                         config->sekcjeConf.setSekcjaStan(config->programConf.sekwencjeTab[i]->getSekcjaId(),
                                                        config->programConf.sekwencjeTab[i]->getAkcja(),
                                                        config->programConf.sekwencjeTab[i]->getCzasTrwaniaAkcji());
@@ -62,7 +66,7 @@ void Manager::loop()
         {
             
             //--- program x uruchiomiony wybierz sekwencje
-            unsigned long obecnaSekundaDzialaniaProgramu = czasOstatniegoTestu - config->programConf.programyTab[uruchomionyProgramIndex]->lastProgramRun;
+            obecnaSekundaDzialaniaProgramu = czasOstatniegoTestu - config->programConf.programyTab[uruchomionyProgramIndex]->lastProgramRun;
             Serial.printf("Manager uruchomiony programId: %d, index: %d, czas: %lu\n",uruchomionyProgramId,uruchomionyProgramIndex,obecnaSekundaDzialaniaProgramu );
             sprawdzSekwencje(obecnaSekundaDzialaniaProgramu);
             //--- czy program x powinien sie zatrzymac
@@ -84,6 +88,7 @@ bool Manager::startProgram(uint8_t programId,unsigned long czasStartu)
     Serial.printf("%s, %d, %lu\n",__PRETTY_FUNCTION__,programId,czasStartu);
     if(programId!=BRAK_PROGRAMU)
     {   
+        lastRunProgramId=programId;
         config->sekcjeConf.setOffSekcjeAll();
                 if(czasStartu==0)czasStartu=czas->getTimeInSecondsRTC();
                 uruchomionyProgramIndex=config->programConf.getProgramById(programId);
@@ -103,9 +108,9 @@ bool Manager::stopProgram()
     if(uruchomionyProgramId!=BRAK_PROGRAMU)
     {
         config->programConf.programyTab[uruchomionyProgramIndex]->stopProgram();
-        uruchomionyProgramId=BRAK_PROGRAMU;
         config->sekcjeConf.setOffSekcjeAll();
         Serial.printf("** Manager program %d stop\n", uruchomionyProgramId);
+        uruchomionyProgramId=BRAK_PROGRAMU;
         return true;
     }
     return false;
@@ -114,11 +119,17 @@ bool Manager::stopProgram()
 String Manager::getStatusJson()
 {
     Serial.println(__PRETTY_FUNCTION__);
-    String r= String("{\"tag\":\"")+String(TAG_STATUS)+
-    r+=String("\",\"sekcje\":")+config->sekcjeConf.getSekcjeStan();
-    r+=String(",\"lastRunProgramId\":")+String(lastRunProgramId);
-    r+=String(",\"uruchomionyProgramId\":")+String(uruchomionyProgramId);
-    r+=String(",\"czasOstatniegoTestu\":")+String(czasOstatniegoTestu);
+    String r=String("{\"czasOstatniegoTestu\":")+String(czasOstatniegoTestu);
+     if(lastRunProgramId!=BRAK_PROGRAMU)
+    {
+        r+=String(",\"lastRunProgramId\":")+String(lastRunProgramId);
+    }
+    if(uruchomionyProgramId!=BRAK_PROGRAMU)
+   {
+     r+=String(",\"uruchomionyProgramId\":")+String(uruchomionyProgramId);
+     r+=String(",\"obecnaSekundaDzialaniaProgramu\":")+String(obecnaSekundaDzialaniaProgramu);
+   }
+    
     r+=String("}"); 
     return r;
 }

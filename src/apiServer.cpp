@@ -152,15 +152,21 @@ void ApiServer::restSetSekcjaConf(uint8_t reqType)
          returnError(__FUNCTION__);
     }
 }
+String ApiServer::makeStanJson()
+{
+     String s="{\"rtc\":"+String(config->czas->getTimeInSecondsRTC())+",\"ntp\":"+String(config->czas->getTimeInSecondsNTP())+",\"sekcje\":"+
+        config->sekcjeConf.getSekcjeStan()+",\"upT\":"+String(millis())+",\"program\":"+manager->getStatusJson()+ "}";
+
+   return s;
+}
 void ApiServer::restSetSekcjeStan()
 {
     addCORS();
     if(!testArgs()) return;
     if(config->sekcjeConf.setSekcjeStan(server->arg(API_PARAM_NAME)))
     {
-         String s="{\"rtc\":"+String(config->czas->getTimeInSecondsRTC())+",\"ntp\":"+String(config->czas->getTimeInSecondsNTP())+",\"sekcje\":"+
-        config->sekcjeConf.getSekcjeStan()+",\"upT\":"+String(millis())+"}";
-        server->send(200, API_TYPE_JSON,s);
+    
+        server->send(200, API_TYPE_JSON, makeStanJson());
     }else
     {
        // server->send(500, "text/plain", "Error setSekcjeStan");
@@ -171,9 +177,8 @@ void ApiServer::restGetSekcjeStan()
 {
     addCORS();
   //  if(!testArgs()) return;
-  String s="{\"rtc\":"+String(config->czas->getTimeInSecondsRTC())+",\"ntp\":"+String(config->czas->getTimeInSecondsNTP())+",\"sekcje\":"+
-        config->sekcjeConf.getSekcjeStan()+",\"upT\":"+String(millis())+"}";
-    server->send(200, API_TYPE_JSON,s);
+ 
+    server->send(200, API_TYPE_JSON,makeStanJson());
     
 }
 void ApiServer::restSetProgram(uint8_t reqType)

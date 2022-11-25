@@ -17,6 +17,7 @@ class Manager
     int uruchomionyProgramId=BRAK_PROGRAMU;
     int uruchomionyProgramIndex=0;
     unsigned long czasOstatniegoTestu=0;
+    unsigned long obecnaSekundaDzialaniaProgramu=0;
     void sprawdzSekwencje(unsigned long obecnaSekundaDzialaniaProgramu);
     public:
         Manager(){};
