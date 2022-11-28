@@ -18,6 +18,7 @@ class Manager
     int uruchomionyProgramIndex=0;
     unsigned long czasOstatniegoTestu=0;
     unsigned long obecnaSekundaDzialaniaProgramu=0;
+    double korekta;
     void sprawdzSekwencje(unsigned long obecnaSekundaDzialaniaProgramu);
     public:
         Manager(){};
@@ -28,7 +29,7 @@ class Manager
         //long getTimeToNextProgramStart(){return 0;};
         int sprawdzKtoryUruchomicProgram(int d,int hhmm);
         void loop();
-        bool startProgram(uint8_t programId,unsigned long czasStartu=0);
+        bool startProgram(uint8_t programId,double korekta, unsigned long czasStartu=0);
         bool stopProgram();
         String getStatusJson();
 

@@ -306,10 +306,13 @@ void ApiServer::restStartProgram()
                      return;
     }else
     {
-        uint8_t programId=doc["programId"] | ID_PROGRAMU_NIEZNANE;
-        if(manager->startProgram(programId))
+        
+        int programId=doc["programId"] | ID_PROGRAMU_NIEZNANE;
+        if(programId<0) programId=ID_PROGRAMU_NIEZNANE;
+        double korekta=doc["korekta"] | 1;
+        if(manager->startProgram(programId,korekta))
         {
-            server->send(200, API_TYPE_JSON, manager->getStatusJson());
+            server->send(200, API_TYPE_JSON,  makeStanJson());
         }else
         {
             Serial.println("blad");
@@ -324,7 +327,7 @@ void ApiServer::restStopProgram()
     Serial.println(__PRETTY_FUNCTION__);
     if(manager->stopProgram())
     {
-        server->send(200, API_TYPE_JSON, manager->getStatusJson());
+        server->send(200, API_TYPE_JSON,  makeStanJson());
     }else
     {
         Serial.println("blad");
