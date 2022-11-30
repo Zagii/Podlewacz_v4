@@ -112,3 +112,25 @@ bool Sekwencja::copySekwencja(Sekwencja * source)
     programId=source->getProgramId();
     return true;
 }
+
+///////////////////// nie uzywan
+/*
+uint8_t Sekwencja::testSekwencja(unsigned long aktualnaSekundaProgramu,uint8_t testSekcjaId, bool testAkcja)
+{
+    if(testSekcjaId!=sekcjaId)
+    {
+        return -1; // nie ta sekcja
+    }
+    //przedzial czasowy
+    if(aktualnaSekundaProgramu>=startAkcji && aktualneaSekundaProgramu<startAkcji+czasTrwaniaAkcji)
+    {
+        if(testAkcja==akcja)
+        {
+            return 0; // sekcja juz jest w odpowiednim stanie
+        }
+    }else
+    {
+        return -2; // nie ten czas
+    }
+    return 1; //sekwencja sugeruje zmiane stanu
+}*/

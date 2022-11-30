@@ -35,6 +35,7 @@ class Sekwencja
         String getSekwencjaJsonString(bool dodajLastRun=false);
         bool copySekwencja(Sekwencja * source);
 
+      //  uint8_t testSekwencja(unsigned long aktualnaSekundaProgramu,uint8_t testSekcjaId, bool testAkcja);
 };
 
 #endif

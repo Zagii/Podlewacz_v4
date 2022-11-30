@@ -309,8 +309,9 @@ void ApiServer::restStartProgram()
         
         int programId=doc["programId"] | ID_PROGRAMU_NIEZNANE;
         if(programId<0) programId=ID_PROGRAMU_NIEZNANE;
-        double korekta=doc["korekta"] | 1;
-        if(manager->startProgram(programId,korekta))
+        double k=doc["korekta"];
+        Serial.print("korekta: ");Serial.println(k);
+        if(manager->startProgram(programId,k))
         {
             server->send(200, API_TYPE_JSON,  makeStanJson());
         }else

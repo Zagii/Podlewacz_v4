@@ -50,6 +50,7 @@ class Program
         String getProgramJsonString(bool dodajLastRun=false);
         bool copyProgram(Program * source);
         void setCzasTrwaniaProgramu(unsigned long dt){czasTrwaniaProgramu=dt;}
+        bool czyAktywny(){return aktywny;}
         bool czyDzienProgramu(uint8_t nrDnia)
         {
           if(nrDnia>6)return false;

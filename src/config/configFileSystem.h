@@ -8,7 +8,7 @@
 #include "configFS.h"
 
 #define NTP_HOST_DEF "pool.ntp.org"
-#define NTP_OFFSET_DEF 2*3600
+#define NTP_OFFSET_DEF 1*3600
 #define MQTT_HOST_DEF "no-mqtt"
 #define MQTT_PORT_DEF 1881
 #define MQTT_USR_DEF "mqttUsr"
