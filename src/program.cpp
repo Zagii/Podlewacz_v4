@@ -114,7 +114,10 @@ int Program::setProgramFromJson(String jsonConfig)
         for(int i=0;i<7;i++) { dni[i]=d.charAt(i)=='1'?true:false;  }
 
         lastProgramRun=0; //data w sekundach od ostatnio uruchomionego programu
-        aktywny= doc["aktywny"] | false; //)==1 ? true : false ; // czy program jest aktywny
+        int a=doc["aktywny"];
+        if(a>0)
+            aktywny= true; //)==1 ? true : false ; // czy program jest aktywny
+        else aktywny=false;
         
         liczbaGodzin=0;
         if(doc.containsKey("godziny"))

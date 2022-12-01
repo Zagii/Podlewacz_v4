@@ -18,7 +18,7 @@ class Manager
     int uruchomionyProgramIndex=0;
     unsigned long czasOstatniegoTestu=0;
     unsigned long obecnaSekundaDzialaniaProgramu=0;
-    double korekta;
+    double korekta=1.0;
     int lastTestHhMM=0;
     void sprawdzSekwencje(unsigned long obecnaSekundaDzialaniaProgramu);
     public:

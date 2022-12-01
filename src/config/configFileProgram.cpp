@@ -387,7 +387,7 @@ bool ConfigFileProgram::addChangeProgram(String json)
             }
             Program* prog=new Program();
             int r=prog->setProgramFromJson(json);
-            Serial.printf("r: %d",r);
+            Serial.printf("r: %d, akt: %d",r,prog->czyAktywny());
             Serial.println(prog->getProgramJsonString());
             switch(r)
             {
