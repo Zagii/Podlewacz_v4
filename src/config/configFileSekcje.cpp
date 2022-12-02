@@ -245,7 +245,7 @@ String ConfigFileSekcje::getSekcjeStan()
 int  ConfigFileSekcje::getSekcjaById(int id)
 {
     int r=SEKCJA_ID_BRAK;
-    Serial.print(__PRETTY_FUNCTION__);Serial.println(id);
+  //  Serial.print(__PRETTY_FUNCTION__);Serial.println(id);
     if(id==SEKCJA_ID_BRAK || id == SEKCJA_ID_BLAD)
         return id;
     for(int i=0;i<liczbaSekcji;i++)

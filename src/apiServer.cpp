@@ -410,7 +410,7 @@ String ApiServer::printRequestToString()
             message += "URI: ";
             message += server->uri();
             message += "\nMethod: ";
-            message += (server->method() == HTTP_GET) ? "GET" : "POST";
+            message += (server->method() == HTTP_GET) ? "GET" : "POST_PUT";
             message += "\nArguments: ";
             message += server->args();
             message += "\n";

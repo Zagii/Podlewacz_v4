@@ -6,34 +6,35 @@
     w przeciwnym wypadku zwracany jest BRAK_PROGRAMU*/
 int Manager::sprawdzKtoryUruchomicProgram(int d,int hhmm)
 {
-  //  Serial.printf("Sprawdz programy-> dzien: %d, hhmm: %d\n",d,hhmm); 
+    Serial.printf("Sprawdz programy-> dzien: %d, hhmm: %d ->",d,hhmm); 
 
     for(int i=0;i<config->programConf.liczbaProgramow;i++)
     {
-       //  Serial.printf("Program[i]: %d",i);
+        //Serial.print(i);
         if(!config->programConf.programyTab[i]->czyAktywny())
         {
-           // Serial.println(" nieaktywny");
+            Serial.print("n ");
                       
             continue;
         }
         if(config->programConf.programyTab[i]->czyProgramUruchomiony())
         {   // mamy juz wczesniej uruchomiony program
-           // Serial.println(" juz uruchomiony");
+           Serial.print("u ");
         }else
         {
             if(config->programConf.programyTab[i]->czyDzienProgramu(d))
             {
-                 Serial.printf("Sprawdz programy-> dzien: %d, hhmm: %d\n",d,hhmm); 
+                
                 if(config->programConf.programyTab[i]->czyGodzinaStartuProgramu(hhmm))
                 {
-                    Serial.println(" start");
+                    Serial.print("S ");
                     return config->programConf.programyTab[i]->id;
                 }
-                Serial.println(".");
-            }
+                Serial.print(". ");
+            }else Serial.print("_ ");
         }
     }
+     Serial.println(";");
     return BRAK_PROGRAMU;
 };
 void Manager::sprawdzSekwencje(unsigned long obecnaSekundaDzialaniaProgramu)
@@ -84,8 +85,7 @@ void Manager::loop()
         int d=dt.dayOfTheWeek();
         int hhmm=dt.hour()*100+dt.minute();
         
-        if(lastTestHhMM==hhmm)return; //zakladamy uruchomienie tylko o pelnych minutach i tylko raz
-            lastTestHhMM=hhmm;
+       
         // sprawdz czy mamy juz uruchomiony program
         if(uruchomionyProgramId!=BRAK_PROGRAMU)
         {
@@ -101,6 +101,9 @@ void Manager::loop()
             }
         }else
         {   
+            if(lastTestHhMM==hhmm){return;} //zakladamy uruchomienie tylko o pelnych minutach i tylko raz
+
+            lastTestHhMM=hhmm;
             //zaden program nie uruchomiony sprawdz czy uruchomic jakis
             int progId=sprawdzKtoryUruchomicProgram(d,hhmm);
 
@@ -155,7 +158,7 @@ bool Manager::stopProgram()
 
 String Manager::getStatusJson()
 {
-    Serial.println(__PRETTY_FUNCTION__);
+  //  Serial.println(__PRETTY_FUNCTION__);
     String r=String("{\"czasOstatniegoTestu\":")+String(czasOstatniegoTestu);
      if(lastRunProgramId!=BRAK_PROGRAMU)
     {

@@ -33,7 +33,7 @@ class HardwareOutput
     };
     void setValue(uint8_t pin,uint8_t value)
     {
-        Serial.println(__PRETTY_FUNCTION__);
+       // Serial.println(__PRETTY_FUNCTION__);
         switch (pin)
         {
             case 0: outValue.p0=value;  break;

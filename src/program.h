@@ -5,14 +5,14 @@
 //#include "sekwencja.h"
 
 
-#define JSON_SIZE_PROGRAM 256
+#define JSON_SIZE_PROGRAM 1024
 
 
 //#define PROGRAM_TYP_DNI 0 //program aktywny tylko w wybrane dni tygodnia
 //#define PROGRAM_TYP_PARZYSTE 1 //program aktywny tylko w parzyste dni miesiaca
 //#define PROGRAM_TYP_NIEPARZYSTE 2 //program aktywny tylko w nieparzyste dni miesiąca
 
-#define MAX_ILOSC_URUCHAMIANIA_PROGRAMU_DZIENNIE 8
+#define MAX_ILOSC_URUCHAMIANIA_PROGRAMU_DZIENNIE 16
 #define MAX_ILOSC_SEKWENCJI_W_PROGRAMIE 50
 
 #define ID_PROGRAMU_NIEZNANE 254

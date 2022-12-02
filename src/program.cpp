@@ -6,15 +6,33 @@
 };*/
 int Program::dodajGodzine(int g)
 {
-    if(liczbaGodzin<MAX_ILOSC_URUCHAMIANIA_PROGRAMU_DZIENNIE)
+    bool czyDuplikat=false;
+    if(g>2359)g=0;
+    if(g<0) g=0;
+    if(g%100>59)g=0;
+    for(int k=0;k<liczbaGodzin;k++)
     {
-        godzinyTab[liczbaGodzin]=g;
-        liczbaGodzin++;
-        return 0;
-    }else
-    {
-        return -1; //za duzo godzin
+        if(godzinyTab[k]==g)
+        {
+            czyDuplikat=true;
+        }
     }
+    if(!czyDuplikat)
+    {
+        if(liczbaGodzin<MAX_ILOSC_URUCHAMIANIA_PROGRAMU_DZIENNIE)
+        {
+            godzinyTab[liczbaGodzin]=g;
+            liczbaGodzin++;
+        }
+       else
+       {
+            Serial.println(F("Blad, Zbyt wiele godzin uruchominia programu"));
+            return PROGRAM_ID_BLAD;
+        }
+    }else
+       { return PROGRAM_ID_BLAD;}
+
+    return 0;
 };
 String Program::getProgramCSVString()
 {
@@ -123,11 +141,14 @@ int Program::setProgramFromJson(String jsonConfig)
         if(doc.containsKey("godziny"))
         {
             JsonArray godzinyArr= doc["godziny"].as<JsonArray>();
-            liczbaGodzin=godzinyArr.size();
-            for(int i=0; i<liczbaGodzin; i++)
+            int liczbaGodzinTmp=godzinyArr.size();
+            int statusGodz=0;
+            for(int i=0; i<liczbaGodzinTmp; i++)
             {
-              godzinyTab[i]=godzinyArr[i];
+               statusGodz+=dodajGodzine(godzinyArr[i]);
             }   
+            if(statusGodz<0)
+                return PROGRAM_ID_BLAD;
         }
     }
     return tmpId;

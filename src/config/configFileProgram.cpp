@@ -68,7 +68,9 @@ int ConfigFileProgram::saveSekwencjeToFile()
                     wykryteZmiany=true;
                     break;
                 }
+                str.trim();
                 str2=sekwencjeTab[i]->getSekwencjaCSVString();
+                str2.trim();
                 Serial.print(F("str  "));Serial.println(str);
                 Serial.print(F("str2 "));Serial.println(str2);
                 if(!str.equals(str2))
@@ -80,6 +82,10 @@ int ConfigFileProgram::saveSekwencjeToFile()
                 i++;
             }
             if(i==0)// pusty plik
+            {
+                wykryteZmiany=true;
+            }
+            if(i<liczbaSekwencji)
             {
                 wykryteZmiany=true;
             }
@@ -118,7 +124,7 @@ int ConfigFileProgram::saveSekwencjeToFile()
 
 String ConfigFileProgram::getSekwencjeJsonString(bool dodajLastRunSekwencji)
 {
-    Serial.print(__PRETTY_FUNCTION__);
+  //  Serial.print(__PRETTY_FUNCTION__);
    // String ret="{\"tag\":\""+String(TAG_CONFIG_FILE_SEKWENCJE)+"\",\"Sekwencje\":[";
      String ret="[";
     
@@ -127,7 +133,7 @@ String ConfigFileProgram::getSekwencjeJsonString(bool dodajLastRunSekwencji)
         ret+= String(sekwencjeTab[i]->getSekwencjaJsonString(dodajLastRunSekwencji));
         if(i<liczbaSekwencji-1)ret+=",";
     }
-    ret+="]"; Serial.print(": ");Serial.println(ret);
+    ret+="]"; //Serial.print(": ");Serial.println(ret);
     return ret;
 }
 bool ConfigFileProgram::addSekwencja(String json)
@@ -262,7 +268,18 @@ bool ConfigFileProgram::delSekwencja(uint8_t id)
     return saveSekwencjeToFile() == 0 ? true:false;
     
 }
-
+bool ConfigFileProgram::delSekwencjeProgramu(uint8_t pId)
+{
+    bool ret=true;
+    for(int i=0;i<liczbaSekwencji;i++)
+    {
+        if(sekwencjeTab[i]->getProgramId()==pId)
+        {
+            ret&= delSekwencja(sekwencjeTab[i]->getSekwencjaId());
+        }
+    }
+    return ret;
+} 
 /********************************* programy ********************************/
 
 int ConfigFileProgram::loadProgramsFromFile()
@@ -326,12 +343,14 @@ int ConfigFileProgram::saveProgramsToFile()
             while(file.available())
             {
                 str=file.readStringUntil('\n');//.readString();
+                str.trim();
                 if(i>= liczbaProgramow)
                 {
                     wykryteZmiany=true;
                     break;
                 }
                 str2=programyTab[i]->getProgramCSVString();
+                str2.trim();
                 Serial.print(F("str  "));Serial.println(str);
                 Serial.print(F("str2 "));Serial.println(str2);
                 if(!str.equals(str2))
@@ -343,6 +362,10 @@ int ConfigFileProgram::saveProgramsToFile()
                 i++;
             }
             if(i==0)// pusty plik
+            {
+                wykryteZmiany=true;
+            }
+            if(i<liczbaProgramow)
             {
                 wykryteZmiany=true;
             }
@@ -433,7 +456,7 @@ bool ConfigFileProgram::addChangeProgramAndSaveFile(String json)
 
 String ConfigFileProgram::getProgramyJsonString(bool dodajLastRunProgramu)
 {
-    Serial.print(__PRETTY_FUNCTION__);
+   // Serial.print(__PRETTY_FUNCTION__);
   //  String ret="{\"tag\":\""+String(TAG_CONFIG_FILE_PROGRAMY)+"\",\"Programy\":[";
      String ret="[";
     
@@ -443,7 +466,7 @@ String ConfigFileProgram::getProgramyJsonString(bool dodajLastRunProgramu)
         if(i<liczbaProgramow-1)ret+=",";
     }
     ret+="]"; 
-    Serial.print(": ");Serial.println(ret);
+  //  Serial.print(": ");Serial.println(ret);
     return ret;
 }
 
@@ -570,6 +593,12 @@ bool ConfigFileProgram::delProgram(uint8_t id)
         return false;
     }
     Serial.print(F("Przed Mem: ")); Serial.println(ESP.getFreeHeap());
+    /* zanim usuniety bedi program usun sekwencje*/
+    if(!delSekwencjeProgramu(id))
+    {
+        Serial.println(F("Blad, usuwania sekwencji z programu"));
+        //return false;
+    }
     Program * progUsun=programyTab[index];
     for(int i=index;i<liczbaProgramow-1;i++)
     {

@@ -78,7 +78,8 @@ class ConfigFileProgram //: public ConfigFS
         String getSekwencjeJsonString(bool dodajLastRunSekwencji=false);  
         bool changeSekwencjaFromJsonStringAndSaveFile(String json);   
         bool delSekwencjaFromJsonString(String json);
-        bool delSekwencja(uint8_t id);     
+        bool delSekwencja(uint8_t id);  
+        bool delSekwencjeProgramu(uint8_t pId);   
 
 };
 #endif

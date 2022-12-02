@@ -267,7 +267,7 @@ void Sekcja::setStateForTime(uint8_t state, long secondsToSwitch)
 }
 void Sekcja::setStateForTime(bool state, long secondsToSwitch)
 {
-    Serial.printf("setStateForTime state: %d, for: %lu \n", state ? 1 : 0, secondsToSwitch);
+    Serial.printf("Sekcja::setStateForTime state: %d, for: %lu \n", state ? 1 : 0, secondsToSwitch);
     if (secondsToSwitch <= 0)
     {
         setState(state);
