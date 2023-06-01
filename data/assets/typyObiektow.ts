@@ -33,23 +33,49 @@ export interface System {
 
   export interface Program {
     nazwa:String;
-    id: number; //id programu
+    programId?: number; //id programu
     dni: String // w jakich dniach tygodnia program jest uruchamiany 0-nd,1-pn, ..6-sb
-    lastProgramRun:number; //data w sekundach od ostatnio uruchomionego programu
+    lastProgramRun?:number; //data w sekundach od ostatnio uruchomionego programu
     aktywny:boolean; // czy program jest aktywny
-    godzinyTab:number[]; // zapis w formacie zulu hhmm
+    godziny:number[]; // zapis w formacie zulu hhmm
+    calkowityCzasTrwaniaProgramu?:number;
   }
   export interface Sekwencja {
     programId:number;
     sekwencjaId:number;
     sekcjaId:number;
-    akcja:boolean;
+    akcja:number;
     czasTrwaniaAkcji:number; // gdy czas==0 akcja nie powoduje antyakcji
     startAkcji:number; //start akcji 
-    sekwencjaLastRun:number;
+    sekwencjaLastRun?:number;
   }
-  
+  export interface StanAll {
+  rtc:number;
+  ntp:number;
+  upT:number; //millis od restartu 
+  sekcje:Stan[];
+  program:{
+    czasOstatniegoTestu:number;
+    lastRunProgramId?:number;
+    obecnaSekundaDzialaniaProgramu?:number;
+    uruchomionyProgramId?:number;
+    x:number;
+    }   
+  }
   export interface Stan {
     sekcjaId:number;
     stan:boolean;
+    autoSwitchActive:number;
+    lastStateChanged:number;
+    timeToSwitch:number;
+  }
+  export interface StanSet {
+    sekcjaId:number;
+    stan:number;
+    czas?:number;
+  }
+  export interface DialogData {
+    data: any;
+    result: any;
+    
   }
